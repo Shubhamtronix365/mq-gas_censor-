@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h> // Make sure to install "ArduinoJson" by Benoit Blanchon from Library Manager
 
 // ==========================================
@@ -13,7 +14,13 @@ const char* password = "YOUR_WIFI_PASSWORD";
 // ==========================================
 // IMPORTANT: If running locally, use your computer's IP address (e.g., http://192.168.1.5:8000)
 // Do NOT use localhost/127.0.0.1, as that refers to the ESP32 itself
-const char* serverUrl = "http://10.156.255.83:8000/api/v1/ingest"; 
+// IMPORTANT: Use the Render URL now.
+const char* serverUrl = "https://mq-gas-censor-sensegrid-api.onrender.com/api/v1/ingest"; 
+
+// ... (existing code, ensure imports are there or added if needed, wait, I need to see if I can add the secure client in the loop or setup)
+
+// Let's replace the loop part where http.begin is called.
+ 
 
 // ==========================================
 // 3. DEVICE IDENTITY
@@ -59,8 +66,11 @@ void setup() {
 void loop() {
   // Check WiFi connection
   if (WiFi.status() == WL_CONNECTED) {
+    WiFiClientSecure client;
+    client.setInsecure(); // Ignore SSL certificate verification (easiest for testing)
+    
     HTTPClient http;
-    http.begin(serverUrl);
+    http.begin(client, serverUrl);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Device-Token", deviceToken);
 
