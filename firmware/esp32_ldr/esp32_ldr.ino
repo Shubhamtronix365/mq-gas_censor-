@@ -49,8 +49,18 @@ void setup() {
   
   // Auto bulb pin setup (PWM)
   // ESP32 LEDC (PWM) Setup for Core v3.0+
-  // ledcAttach(pin, frequency, resolution_bits);
-  ledcAttach(PIN_AUTO_BULB, 5000, 10); 
+  if (!ledcAttach(PIN_AUTO_BULB, 5000, 10)) {
+    Serial.println("Pulse Width Modulation (PWM) Setup Failed!");
+  } else {
+    Serial.println("PWM Setup Successful");
+    // Startup Flash Test
+    Serial.println("Testing Bulb...");
+    ledcWrite(PIN_AUTO_BULB, 1023); // Full Brightness
+    delay(1000);
+    ledcWrite(PIN_AUTO_BULB, 0);    // Off
+    delay(500);
+    Serial.println("Bulb Test Complete.");
+  }
 
   // Connect to WiFi
   WiFi.begin(ssid, password);
@@ -75,9 +85,11 @@ void loop() {
     // Scale analog 0-4095 to 0-1023 for 10-bit PWM and consistency
     int analog10bit = map(rawAnalog, 0, 4095, 0, 1023);
 
+    // Debugging Inputs
+    // Serial.printf("LDR Digital: %d | Analog (Raw): %d | PWM Out: %d\n", digitalVal, rawAnalog, analog10bit);
+
     // Auto Bulb Logic
     // If Digital is HIGH (Dark/Active) -> Auto Bulb ON with brightness
-    // If Digital is LOW (Light/Inactive) -> Auto Bulb OFF
     if (digitalVal == HIGH) {
       // ledcWrite(pin, duty);
       ledcWrite(PIN_AUTO_BULB, analog10bit); 
