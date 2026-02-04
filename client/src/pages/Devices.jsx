@@ -7,6 +7,7 @@ const Devices = () => {
     const [devices, setDevices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newDeviceId, setNewDeviceId] = useState("");
+    const [newDeviceType, setNewDeviceType] = useState("gas_sensor");
     const [showAddModal, setShowAddModal] = useState(false);
     const [deviceToDelete, setDeviceToDelete] = useState(null);
 
@@ -29,10 +30,12 @@ const Devices = () => {
         e.preventDefault();
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/devices/`, {
-                device_id: newDeviceId
+                device_id: newDeviceId,
+                device_type: newDeviceType
             });
             setShowAddModal(false);
             setNewDeviceId("");
+            setNewDeviceType("gas_sensor");
             fetchDevices();
         } catch (error) {
             alert("Failed to add device. ID might be taken.");
@@ -106,8 +109,12 @@ const Devices = () => {
                                 </div>
                             </div>
 
-                            <h3 className="text-lg font-bold text-primary mb-1">ESP32 Sensor Node</h3>
-                            <p className="text-sm text-secondary mb-4">Click to view real-time data</p>
+                            <h3 className="text-lg font-bold text-primary mb-1">
+                                {device.device_type === 'ldr_sensor' ? 'LDR Sensor Node' : 'Gas Sensor Node'}
+                            </h3>
+                            <p className="text-sm text-secondary mb-4">
+                                {device.device_type === 'ldr_sensor' ? 'Light sensing & automation' : 'Air quality monitoring'}
+                            </p>
 
                             <div className="flex items-center space-x-2 text-sm text-secondary">
                                 <Activity size={16} />
@@ -162,11 +169,22 @@ const Devices = () => {
                             <input
                                 type="text"
                                 required
-                                className="input-field mb-6"
+                                className="input-field mb-4"
                                 placeholder="e.g. ESP32_01"
                                 value={newDeviceId}
                                 onChange={(e) => setNewDeviceId(e.target.value)}
                             />
+
+                            <label className="block text-sm font-medium text-secondary mb-2">Device Type</label>
+                            <select
+                                className="input-field mb-6"
+                                value={newDeviceType}
+                                onChange={(e) => setNewDeviceType(e.target.value)}
+                            >
+                                <option value="gas_sensor">Gas Sensor Device</option>
+                                <option value="ldr_sensor">LDR Sensor Device</option>
+                            </select>
+
                             <div className="flex space-x-3">
                                 <button
                                     type="button"
