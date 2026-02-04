@@ -10,21 +10,36 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [token, setToken] = useState(localStorage.getItem("token"));
 
-    // Configure axios defaults
+    // Configure axios defaults and fetch user
     useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-            localStorage.setItem("token", token);
-            // Ideally here we would fetch user profile to validate token
-            // For now we just assume if token exists, we are logged in or will fail on request
-            setUser({ email: "user@example.com" }); // Placeholder or decode JWT
-        } else {
-            delete axios.defaults.headers.common["Authorization"];
-            localStorage.removeItem("token");
-            setUser(null);
-        }
-        setLoading(false);
+        const initAuth = async () => {
+            if (token) {
+                axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+                localStorage.setItem("token", token);
+                try {
+                    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/users/me`);
+                    setUser(response.data);
+                } catch (error) {
+                    console.error("Failed to fetch user profile", error);
+                    // If 401, clear token
+                    if (error.response && error.response.status === 401) {
+                        logout();
+                    }
+                }
+            } else {
+                delete axios.defaults.headers.common["Authorization"];
+                localStorage.removeItem("token");
+                setUser(null);
+            }
+            setLoading(false);
+        };
+
+        initAuth();
     }, [token]);
+
+    const updateUser = (userData) => {
+        setUser(prev => ({ ...prev, ...userData }));
+    };
 
     const login = async (email, password) => {
         try {
@@ -59,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, token }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, token, updateUser }}>
             {!loading && children}
         </AuthContext.Provider>
     );

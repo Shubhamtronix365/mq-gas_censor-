@@ -1,9 +1,14 @@
-import { useState, useEffect } from "react";
+import { startTransition, useState, useEffect } from "react";
 import axios from "axios";
 import { Plus, Server, Activity, AlertTriangle, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import OnboardingModal from "../components/OnboardingModal";
+import WelcomeToast from "../components/WelcomeToast";
 
 const Dashboard = () => {
+    const { user } = useAuth();
+    const [showWelcome, setShowWelcome] = useState(false);
     const [devices, setDevices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newDeviceId, setNewDeviceId] = useState("");
@@ -11,7 +16,14 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchDevices();
-    }, []);
+
+        // Show welcome message only once per session
+        const welcomeShown = sessionStorage.getItem("welcomeShown");
+        if (user && user.full_name && !welcomeShown) {
+            setShowWelcome(true);
+            sessionStorage.setItem("welcomeShown", "true");
+        }
+    }, [user]);
 
     const fetchDevices = async () => {
         try {
@@ -41,7 +53,7 @@ const Dashboard = () => {
     const handleDeleteDevice = async (e, deviceId) => {
         e.preventDefault(); // Prevent link navigation
         e.stopPropagation(); // Stop event bubbling
-        
+
         if (!window.confirm(`Are you sure you want to delete device ${deviceId}? This cannot be undone.`)) {
             return;
         }
@@ -56,7 +68,13 @@ const Dashboard = () => {
     };
 
     return (
-        <div>
+        <div className="relative">
+            {/* Onboarding Modal - Forces name completion */}
+            {user && !user.full_name && <OnboardingModal />}
+
+            {/* Welcome Animation */}
+            {showWelcome && user && user.full_name && <WelcomeToast name={user.full_name} />}
+
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
@@ -94,7 +112,7 @@ const Dashboard = () => {
                                     <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-secondary">
                                         {device.device_id}
                                     </span>
-                                    <button 
+                                    <button
                                         onClick={(e) => handleDeleteDevice(e, device.device_id)}
                                         className="text-gray-400 hover:text-red-500 transition-colors p-1"
                                         title="Delete Device"
