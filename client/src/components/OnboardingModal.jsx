@@ -21,6 +21,7 @@ const OnboardingModal = () => {
                 full_name: fullName
             });
             updateUser({ full_name: response.data.full_name });
+            window.location.reload();
         } catch (err) {
             console.error("Failed to update profile", err);
             setError("Failed to save. Please try again.");
