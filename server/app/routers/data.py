@@ -7,11 +7,17 @@ router = APIRouter(
     tags=["data"]
 )
 
-def calculate_status(gas: float, temperature: float, distance: float) -> str:
-    # Example logic
-    if gas > 1000 or distance < 20: 
+from typing import Optional
+
+def calculate_status(gas: Optional[float], temperature: Optional[float], distance: Optional[float]) -> str:
+    # Handle missing values safely
+    gas_val = gas if gas is not None else 0.0
+    dist_val = distance if distance is not None else 9999.0 # Default to safe distance
+    temp_val = temperature if temperature is not None else 0.0
+
+    if gas_val > 1000 or dist_val < 20: 
         return "DANGER"
-    elif gas > 500 or temperature > 40:
+    elif gas_val > 500 or temp_val > 40:
         return "WARNING"
     return "SAFE"
 

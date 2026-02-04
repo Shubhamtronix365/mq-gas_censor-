@@ -33,10 +33,10 @@ class SensorData(Base):
     device_id = Column(String, ForeignKey("devices.device_id"))
     timestamp = Column(DateTime, default=datetime.utcnow)
     
-    gas = Column(Float)
-    temperature = Column(Float)
-    humidity = Column(Float)
-    distance = Column(Float)
+    gas = Column(Float, nullable=True)
+    temperature = Column(Float, nullable=True)
+    humidity = Column(Float, nullable=True)
+    distance = Column(Float, nullable=True)
     
     # Status: SAFE, WARNING, DANGER
     status = Column(String)

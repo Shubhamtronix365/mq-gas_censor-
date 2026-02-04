@@ -39,10 +39,10 @@ class DeviceResponse(DeviceBase):
 # Sensor Data Schemas
 class SensorDataCreate(BaseModel):
     device_id: str
-    gas: float
-    temperature: float
-    humidity: float
-    distance: float
+    gas: Optional[float] = None
+    temperature: Optional[float] = None
+    humidity: Optional[float] = None
+    distance: Optional[float] = None
 
 class SensorDataResponse(SensorDataCreate):
     id: int

@@ -70,67 +70,75 @@ void loop() {
     client.setInsecure(); // Ignore SSL certificate verification (easiest for testing)
     
     HTTPClient http;
-    http.begin(client, serverUrl);
-    http.addHeader("Content-Type", "application/json");
-    http.addHeader("Device-Token", deviceToken);
-
-    // Prepare JSON payload
-    // Using DynamicJsonDocument
-    StaticJsonDocument<200> doc;
     
-    // Data Variables
-    float gas, temp, hum, dist;
+    Serial.print("[HTTP] begin... ");
+    // timeout increased to 15 seconds
+    http.setConnectTimeout(15000); 
+    http.setTimeout(15000);
+    
+    if (http.begin(client, serverUrl)) {
+      Serial.println("OK");
+      http.addHeader("Content-Type", "application/json");
+      http.addHeader("Device-Token", deviceToken);
 
-    if (SIMULATION_MODE) {
-      // Generate realistic fake data
-      gas = random(200, 1200);           // PPM
-      temp = random(200, 350) / 10.0;    // 20.0 - 35.0 C
-      hum = random(40, 80);              // %
-      dist = random(5, 400);             // cm
-    } else {
-      // READ REAL SENSORS HERE
-      // 1. Gas
-      gas = analogRead(PIN_MQ135); 
+      // Prepare JSON payload
+      // Using DynamicJsonDocument
+      StaticJsonDocument<200> doc;
       
-      // 2. Temp/Hum (Placeholder for DHT logic)
-      temp = 25.0; // dht.readTemperature();
-      hum = 50.0;  // dht.readHumidity();
+      // Data Variables
+      float gas, temp, hum, dist;
 
-      // 3. Distance (HC-SR04)
-      digitalWrite(PIN_TRIG, LOW);
-      delayMicroseconds(2);
-      digitalWrite(PIN_TRIG, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(PIN_TRIG, LOW);
-      long duration = pulseIn(PIN_ECHO, HIGH);
-      dist = duration * 0.034 / 2;
-    }
+      if (SIMULATION_MODE) {
+        // Generate realistic fake data
+        gas = random(200, 1200);           // PPM
+        temp = random(200, 350) / 10.0;    // 20.0 - 35.0 C
+        hum = random(40, 80);              // %
+        dist = random(5, 400);             // cm
+      } else {
+        // READ REAL SENSORS HERE
+        // 1. Gas
+        gas = analogRead(PIN_MQ135); 
+        
+        // 2. Temp/Hum (Placeholder for DHT logic)
+        temp = 25.0; // dht.readTemperature();
+        hum = 50.0;  // dht.readHumidity();
 
-    doc["device_id"] = deviceId;
-    doc["gas"] = gas;
-    doc["temperature"] = temp;
-    doc["humidity"] = hum;
-    doc["distance"] = dist;
+        // 3. Distance (HC-SR04)
+        digitalWrite(PIN_TRIG, LOW);
+        delayMicroseconds(2);
+        digitalWrite(PIN_TRIG, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(PIN_TRIG, LOW);
+        long duration = pulseIn(PIN_ECHO, HIGH);
+        dist = duration * 0.034 / 2;
+      }
 
-    String requestBody;
-    serializeJson(doc, requestBody);
+      doc["device_id"] = deviceId;
+      doc["gas"] = gas;
+      doc["temperature"] = temp;
+      doc["humidity"] = hum;
+      doc["distance"] = dist;
 
-    Serial.println("Sending data: " + requestBody);
+      String requestBody;
+      serializeJson(doc, requestBody);
 
-    // Send POST request
-    int httpResponseCode = http.POST(requestBody);
+      Serial.println("Sending data: " + requestBody);
 
-    if (httpResponseCode > 0) {
-      String response = http.getString();
-      Serial.print("Response Code: ");
-      Serial.println(httpResponseCode);
-      Serial.println("Response: " + response);
+      // Send POST request
+      Serial.print("[HTTP] POST... ");
+      int httpResponseCode = http.POST(requestBody);
+
+      if (httpResponseCode > 0) {
+        Serial.printf("Response Code: %d\n", httpResponseCode);
+        String response = http.getString();
+        Serial.println("Response: " + response);
+      } else {
+        Serial.printf("Error on sending POST: %s\n", http.errorToString(httpResponseCode).c_str());
+      }
+      http.end();
     } else {
-      Serial.print("Error on sending POST: ");
-      Serial.println(httpResponseCode);
+      Serial.println("[HTTP] Unable to connect");
     }
-
-    http.end();
   } else {
     Serial.println("WiFi Disconnected");
   }
