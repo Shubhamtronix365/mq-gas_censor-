@@ -33,7 +33,8 @@ def create_device(device: schemas.DeviceBase, current_user: models.User = Depend
     new_device = models.Device(
         device_id=device.device_id,
         owner_id=current_user.id,
-        device_token=token
+        device_token=token,
+        device_type=device.device_type
     )
     db.add(new_device)
     db.commit()
@@ -60,7 +61,10 @@ def delete_device(device_id: str, current_user: models.User = Depends(auth.get_c
         raise HTTPException(status_code=404, detail="Device not found")
     
     # Delete associated readings first (optional if cascade is set, but good for safety)
+    # Delete associated readings first (optional if cascade is set, but good for safety)
     db.query(models.SensorData).filter(models.SensorData.device_id == device_id).delete()
+    db.query(models.LDRReading).filter(models.LDRReading.device_id == device_id).delete()
+    db.query(models.DeviceOutput).filter(models.DeviceOutput.device_id == device_id).delete()
     
     # Delete the device
     db.delete(device)
