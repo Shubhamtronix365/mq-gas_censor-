@@ -1,4 +1,4 @@
-# Deployment Guide for TRONIX365 SenseGrid
+# Deployment Guide for TRONIX365 Indianiiot
 
 This guide will help you deploy your full-stack IoT application to the cloud.
 

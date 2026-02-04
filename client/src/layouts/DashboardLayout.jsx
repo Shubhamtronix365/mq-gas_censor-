@@ -37,7 +37,7 @@ const DashboardLayout = () => {
             <aside className="w-64 bg-white border-r border-border hidden md:flex flex-col">
                 <div className="p-8">
                     <h1 className="text-2xl font-bold tracking-tight text-primary">TRONIX<span className="font-light">365</span></h1>
-                    <p className="text-xs text-secondary mt-1 tracking-widest uppercase">SenseGrid</p>
+                    <p className="text-xs text-secondary mt-1 tracking-widest uppercase">Indianiiot</p>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2">

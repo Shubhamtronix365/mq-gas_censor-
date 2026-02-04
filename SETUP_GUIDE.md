@@ -1,4 +1,4 @@
-# TRONIX365 SenseGrid - Database Setup Guide
+# TRONIX365 Indianiiot - Database Setup Guide
 
 This project is configured to use **PostgreSQL** as the production database. 
 *Note: For immediate testing, the app is currently running in "SQLite Mode" so you can see it working without this setup.*

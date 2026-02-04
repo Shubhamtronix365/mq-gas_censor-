@@ -6,7 +6,7 @@ from .routers import auth, devices, data, users
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="TRONIX365 SenseGrid")
+app = FastAPI(title="TRONIX365 Indianiiot")
 
 # Configure CORS
 origins = [
@@ -14,7 +14,7 @@ origins = [
     "http://localhost:3000",
     "https://indianiiot.com",
     "https://www.indianiiot.com",
-    "https://mq-gas-censor-sensegrid-api.onrender.com",
+    "https://mq-gas-censor-sensegrid-api-tronix.onrender.com",
     "*",
 ]
 
@@ -33,4 +33,4 @@ app.include_router(data.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to TRONIX365 SenseGrid API"}
+    return {"message": "Welcome to TRONIX365 Indianiiot API"}

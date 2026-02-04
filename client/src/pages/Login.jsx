@@ -24,7 +24,7 @@ const Login = () => {
             <div className="card-premium w-full max-w-md p-8">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-primary mb-2">Welcome Back</h1>
-                    <p className="text-secondary">Sign in to your SenseGrid account</p>
+                    <p className="text-secondary">Sign in to your Indianiiot account</p>
                 </div>
 
                 {error && (

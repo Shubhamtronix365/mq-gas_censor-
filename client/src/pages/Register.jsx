@@ -30,7 +30,7 @@ const Register = () => {
             <div className="card-premium w-full max-w-md p-8">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-primary mb-2">Create Account</h1>
-                    <p className="text-secondary">Join TRONIX365 SenseGrid</p>
+                    <p className="text-secondary">Join TRONIX365 Indianiiot</p>
                 </div>
 
                 {error && (
