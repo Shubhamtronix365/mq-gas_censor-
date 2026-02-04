@@ -18,6 +18,13 @@ def migrate():
             print("Successfully added 'phone_number'.")
         except Exception as e:
             print(f"Error adding 'phone_number': {e}")
+
+        print("Adding 'device_type' column to devices table...")
+        try:
+            connection.execute(text("ALTER TABLE devices ADD COLUMN IF NOT EXISTS device_type VARCHAR DEFAULT 'gas_sensor'"))
+            print("Successfully added 'device_type'.")
+        except Exception as e:
+            print(f"Error adding 'device_type': {e}")
             
         connection.commit()
     print("Migration complete.")
