@@ -4,66 +4,29 @@ import { Plus, Server, Activity, AlertTriangle, CheckCircle, XCircle, Trash2 } f
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import OnboardingModal from "../components/OnboardingModal";
-import WelcomeToast from "../components/WelcomeToast";
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const [showWelcome, setShowWelcome] = useState(false);
-    const [devices, setDevices] = useState([]);
+    const [stats, setStats] = useState({ total: 0, active: 0 });
     const [loading, setLoading] = useState(true);
-    const [newDeviceId, setNewDeviceId] = useState("");
-    const [showAddModal, setShowAddModal] = useState(false);
 
     useEffect(() => {
-        fetchDevices();
-
-        // Show welcome message only once per session
-        const welcomeShown = sessionStorage.getItem("welcomeShown");
-        if (user && user.full_name && !welcomeShown) {
-            setShowWelcome(true);
-            sessionStorage.setItem("welcomeShown", "true");
-        }
+        fetchStats();
     }, [user]);
 
-    const fetchDevices = async () => {
+    const fetchStats = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/`);
-            setDevices(response.data);
+            // Simple mock stats derived from devices list for now
+            const devices = response.data || [];
+            setStats({
+                total: devices.length,
+                active: devices.length // Assuming all returned are "active" for now or add logic if needed
+            });
         } catch (error) {
-            console.error("Error fetching devices:", error);
+            console.error("Error fetching stats:", error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleAddDevice = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/devices/`, {
-                device_id: newDeviceId
-            });
-            setShowAddModal(false);
-            setNewDeviceId("");
-            fetchDevices();
-        } catch (error) {
-            alert("Failed to add device. ID might be taken.");
-        }
-    };
-
-    const handleDeleteDevice = async (e, deviceId) => {
-        e.preventDefault(); // Prevent link navigation
-        e.stopPropagation(); // Stop event bubbling
-
-        if (!window.confirm(`Are you sure you want to delete device ${deviceId}? This cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/devices/${deviceId}`);
-            fetchDevices(); // Refresh list
-        } catch (error) {
-            console.error("Error deleting device:", error);
-            alert("Failed to delete device.");
         }
     };
 
@@ -72,99 +35,63 @@ const Dashboard = () => {
             {/* Onboarding Modal - Forces name completion */}
             {user && !user.full_name && <OnboardingModal />}
 
-            {/* Welcome Animation */}
-            {showWelcome && user && user.full_name && <WelcomeToast name={user.full_name} />}
-
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
-                    <p className="text-secondary">Overview of your connected devices</p>
-                </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="btn-primary flex items-center space-x-2"
-                >
-                    <Plus size={18} />
-                    <span>Add Device</span>
-                </button>
+            <div className="mb-8 animate-in slide-in-from-left duration-700 fade-in">
+                <h1 className="text-3xl font-bold text-primary mb-2">
+                    Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">{user?.full_name || 'User'}</span>!
+                </h1>
+                <p className="text-secondary text-lg">Here's what's happening with your sensor network today.</p>
             </div>
 
             {loading ? (
-                <div className="text-center py-20 text-secondary">Loading devices...</div>
-            ) : devices.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-xl border border-border">
-                    <Server className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                    <h3 className="text-lg font-medium text-primary">No devices found</h3>
-                    <p className="text-secondary mb-6">Add your first ESP32 device to get started</p>
-                    <button onClick={() => setShowAddModal(true)} className="btn-primary">
-                        Add Device
-                    </button>
-                </div>
+                <div className="text-center py-20 text-secondary">Loading statistics...</div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {devices.map((device) => (
-                        <Link to={`/devices/${device.device_id}`} key={device.device_id} className="card-premium p-6 group block">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-gray-50 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                                    <Server size={24} />
-                                </div>
-                                <div className="flex flex-col items-end space-y-2">
-                                    <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-secondary">
-                                        {device.device_id}
-                                    </span>
-                                    <button
-                                        onClick={(e) => handleDeleteDevice(e, device.device_id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                        title="Delete Device"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-in slide-in-from-bottom duration-700 delay-150 fade-in fill-mode-backwards">
+                    {/* Stat Card 1 */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-border flex items-center space-x-4 hover:shadow-md transition-shadow">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                            <Server size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-secondary font-medium">Total Devices</p>
+                            <h3 className="text-2xl font-bold text-primary">{stats.total}</h3>
+                        </div>
+                    </div>
 
-                            <h3 className="text-lg font-bold text-primary mb-1">ESP32 Sensor Node</h3>
-                            <p className="text-sm text-secondary mb-4">Click to view real-time data</p>
+                    {/* Stat Card 2 */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-border flex items-center space-x-4 hover:shadow-md transition-shadow">
+                        <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+                            <Activity size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-secondary font-medium">Active Monitoring</p>
+                            <h3 className="text-2xl font-bold text-primary">{stats.active}</h3>
+                        </div>
+                    </div>
 
-                            <div className="flex items-center space-x-2 text-sm text-secondary">
-                                <Activity size={16} />
-                                <span>Active Monitoring</span>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            )}
-
-            {/* Add Device Modal */}
-            {showAddModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
-                        <h2 className="text-xl font-bold mb-4">Add New Device</h2>
-                        <form onSubmit={handleAddDevice}>
-                            <label className="block text-sm font-medium text-secondary mb-2">Device ID</label>
-                            <input
-                                type="text"
-                                required
-                                className="input-field mb-6"
-                                placeholder="e.g. ESP32_01"
-                                value={newDeviceId}
-                                onChange={(e) => setNewDeviceId(e.target.value)}
-                            />
-                            <div className="flex space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAddModal(false)}
-                                    className="flex-1 py-2 rounded-lg border border-border hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button type="submit" className="flex-1 btn-primary py-2">
-                                    Add Device
-                                </button>
-                            </div>
-                        </form>
+                    {/* Stat Card 3 (Placeholder) */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-border flex items-center space-x-4 hover:shadow-md transition-shadow">
+                        <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                            <CheckCircle size={24} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-secondary font-medium">System Status</p>
+                            <h3 className="text-2xl font-bold text-primary">Optimal</h3>
+                        </div>
                     </div>
                 </div>
             )}
+
+            <div className="bg-white rounded-xl shadow-sm border border-border p-6 animate-in slide-in-from-bottom duration-700 delay-300 fade-in fill-mode-backwards">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold text-primary">Quick Actions</h3>
+                </div>
+                <div className="flex gap-4">
+                    <Link to="/devices" className="btn-primary inline-flex items-center space-x-2">
+                        <Server size={18} />
+                        <span>Manage Devices</span>
+                    </Link>
+                </div>
+            </div>
         </div>
     );
 };
