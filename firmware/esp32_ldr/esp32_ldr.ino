@@ -136,9 +136,10 @@ void sendTelemetry(int digitalVal, int analogVal) {
     
     // We derive "Digital" status from the Analog value for consistent UI behavior
     // If brightness > 50 (scales to ~5%), consider it ON
-    bool isActive = (analogVal > 50);
+    // bool isActive = (analogVal > 50);  // <-- Commented out to restore Digital Pin request
     
-    doc["digital_value"] = isActive; 
+    // User requested "add digital add D) also", meaning they want the REAL digital pin reading.
+    doc["digital_value"] = (digitalVal == HIGH); 
     doc["analog_value"] = analogVal;
 
     String requestBody;
