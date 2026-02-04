@@ -133,7 +133,12 @@ void sendTelemetry(int digitalVal, int analogVal) {
 
     StaticJsonDocument<200> doc;
     doc["device_id"] = deviceId;
-    doc["digital_value"] = (digitalVal == HIGH); // Convert to boolean
+    
+    // We derive "Digital" status from the Analog value for consistent UI behavior
+    // If brightness > 50 (scales to ~5%), consider it ON
+    bool isActive = (analogVal > 50);
+    
+    doc["digital_value"] = isActive; 
     doc["analog_value"] = analogVal;
 
     String requestBody;
@@ -141,7 +146,7 @@ void sendTelemetry(int digitalVal, int analogVal) {
 
     int responseCode = http.POST(requestBody);
     if (responseCode > 0) {
-      Serial.printf("[Telemetry] Sent D:%d A:%d -> Code: %d\n", digitalVal, analogVal, responseCode);
+      Serial.printf("[Telemetry] Sent A:%d (Active:%d) -> Code: %d\n", analogVal, isActive, responseCode);
     } else {
       Serial.printf("[Telemetry] Error: %s\n", http.errorToString(responseCode).c_str());
     }
