@@ -89,13 +89,17 @@ void loop() {
     // Serial.printf("LDR Digital: %d | Analog (Raw): %d | PWM Out: %d\n", digitalVal, rawAnalog, analog10bit);
 
     // Auto Bulb Logic
-    // If Digital is HIGH (Dark/Active) -> Auto Bulb ON with brightness
+    // User Requirement: "as the reading increases its brightness should also increase"
+    // We removed the digitalVal check to ensure it always responds to analog changes.
+    ledcWrite(PIN_AUTO_BULB, analog10bit); 
+    
+    /* Previous Logic (Removed)
     if (digitalVal == HIGH) {
-      // ledcWrite(pin, duty);
       ledcWrite(PIN_AUTO_BULB, analog10bit); 
     } else {
       ledcWrite(PIN_AUTO_BULB, 0); 
     }
+    */
 
     // --- B. SEND TELEMETRY (Periodic) ---
     if (currentMillis - lastTelemetryTime >= telemetryInterval) {
