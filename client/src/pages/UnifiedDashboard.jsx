@@ -109,9 +109,9 @@ const UnifiedDashboard = ({ id, device }) => {
             {/* Header */}
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-primary flex items-center gap-3 tracking-tight">
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-highlight flex items-center gap-3 tracking-tight">
                         {id}
-                        <span className="text-xs px-3 py-1 rounded-full border bg-purple-50 text-purple-700 border-purple-200 font-bold shadow-sm">
+                        <span className="text-xs px-3 py-1 rounded-full border bg-accent/10 text-highlight border-accent/20 font-bold shadow-sm backdrop-blur-md">
                             COMBINED SYSTEM
                         </span>
                     </h1>
@@ -120,9 +120,9 @@ const UnifiedDashboard = ({ id, device }) => {
 
                 <div className="flex flex-col items-end gap-3 w-full xl:w-auto">
                     {device && (
-                        <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto flex items-center gap-2 pr-4 transition-all hover:shadow-md">
-                            <div className="bg-slate-50 px-3 py-2 rounded-lg border-r border-slate-100">
-                                <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Device Token</p>
+                        <div className="bg-surface/50 backdrop-blur-sm p-1 rounded-xl border border-border shadow-sm w-full md:w-auto flex items-center gap-2 pr-4 transition-all hover:shadow-md hover:border-accent/40">
+                            <div className="bg-accent/10 px-3 py-2 rounded-lg border-r border-accent/10">
+                                <p className="text-[10px] text-highlight font-bold uppercase tracking-wider">Device Token</p>
                             </div>
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <Key size={14} className="text-accent shrink-0" />
@@ -130,7 +130,7 @@ const UnifiedDashboard = ({ id, device }) => {
                             </div>
                             <button
                                 onClick={copyToClipboard}
-                                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-secondary hover:text-primary relative group"
+                                className="p-1.5 hover:bg-white/5 rounded-lg transition-colors text-secondary hover:text-white relative group"
                                 title="Copy"
                             >
                                 {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
@@ -142,7 +142,7 @@ const UnifiedDashboard = ({ id, device }) => {
 
             {/* Gas Section */}
             <div className="mb-10">
-                <h2 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <Wind className="text-accent" /> Gas & Environment
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -151,28 +151,28 @@ const UnifiedDashboard = ({ id, device }) => {
                         value={latestGas?.gas ? Number(latestGas.gas).toFixed(0) : null}
                         unit="ppm"
                         icon={Wind}
-                        colorClass="bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 ring-1 ring-gray-200/50"
+                        colorClass="bg-gradient-to-br from-gray-800 to-gray-900 text-gray-300 ring-1 ring-gray-700"
                     />
                     <SensorCard
                         title="Temperature"
                         value={latestGas?.temperature ? Number(latestGas.temperature).toFixed(1) : null}
                         unit="°C"
                         icon={Thermometer}
-                        colorClass="bg-gradient-to-br from-orange-50 to-orange-100 text-orange-600 ring-1 ring-orange-200/50"
+                        colorClass="bg-gradient-to-br from-orange-900/40 to-orange-800/20 text-orange-400 ring-1 ring-orange-900/50"
                     />
                     <SensorCard
                         title="Humidity"
                         value={latestGas?.humidity ? Number(latestGas.humidity).toFixed(1) : null}
                         unit="%"
                         icon={Droplets}
-                        colorClass="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 ring-1 ring-blue-200/50"
+                        colorClass="bg-gradient-to-br from-blue-900/40 to-blue-800/20 text-blue-400 ring-1 ring-blue-900/50"
                     />
                     <SensorCard
                         title="Distance"
                         value={latestGas?.distance ? Number(latestGas.distance).toFixed(1) : null}
                         unit="cm"
                         icon={Activity}
-                        colorClass="bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 ring-1 ring-purple-200/50"
+                        colorClass="bg-gradient-to-br from-purple-900/40 to-purple-800/20 text-purple-400 ring-1 ring-purple-900/50"
                     />
                 </div>
             </div>
@@ -180,25 +180,25 @@ const UnifiedDashboard = ({ id, device }) => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
                 {/* LDR Section */}
                 <div>
-                    <h2 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <Sun className="text-yellow-500" /> Light & Bulb Control
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                        <div className="card-premium p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-yellow-50 to-white border-yellow-100">
-                            <div className="p-4 rounded-full bg-yellow-100 text-yellow-600 mb-4">
+                        <div className="card-premium p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-yellow-900/30 to-yellow-800/10 border-yellow-700/30">
+                            <div className="p-4 rounded-full bg-yellow-900/40 text-yellow-400 mb-4 ring-1 ring-yellow-700/50">
                                 <Sun size={32} />
                             </div>
                             <h3 className="text-secondary text-sm font-medium uppercase tracking-wide">Analog Reading</h3>
-                            <div className="text-3xl font-bold text-primary mt-1">
+                            <div className="text-3xl font-bold text-white mt-1">
                                 {latestLdr?.analog_value ?? "--"} <span className="text-lg text-secondary font-normal">/ 1050</span>
                             </div>
                         </div>
-                        <div className="card-premium p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-blue-50 to-white border-blue-100">
-                            <div className={`p-4 rounded-full mb-4 ${latestLdr?.digital_value ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                        <div className="card-premium p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-blue-900/30 to-blue-800/10 border-blue-700/30">
+                            <div className={`p-4 rounded-full mb-4 ring-1 ${latestLdr?.digital_value ? 'bg-blue-900/40 text-blue-400 ring-blue-700/50' : 'bg-gray-800 text-gray-400 ring-gray-700'}`}>
                                 <Zap size={32} />
                             </div>
                             <h3 className="text-secondary text-sm font-medium uppercase tracking-wide">Digital Status</h3>
-                            <div className="text-3xl font-bold text-primary mt-1">
+                            <div className="text-3xl font-bold text-white mt-1">
                                 {latestLdr?.digital_value ? "Active (1)" : "Inactive (0)"}
                             </div>
                         </div>
@@ -215,17 +215,17 @@ const UnifiedDashboard = ({ id, device }) => {
                 <div className="flex flex-col gap-6">
                     <div className="card-premium p-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-primary">Bulb Controls</h3>
+                            <h3 className="text-lg font-bold text-white">Bulb Controls</h3>
                             <button
                                 onClick={() => setShowAddOutput(!showAddOutput)}
-                                className="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors"
+                                className="bg-accent hover:bg-accent/80 text-white p-2 rounded-lg transition-colors shadow-lg shadow-accent/20"
                                 title="Add Output"
                             >
                                 <Plus size={20} />
                             </button>
                         </div>
                         {showAddOutput && (
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                            <div className="bg-surface/50 p-4 rounded-xl border border-border mb-4">
                                 <form onSubmit={handleAddOutput}>
                                     <div className="flex gap-2">
                                         <input
@@ -244,7 +244,7 @@ const UnifiedDashboard = ({ id, device }) => {
                                             value={newOutputPin}
                                             onChange={e => setNewOutputPin(e.target.value)}
                                         />
-                                        <button type="submit" className="bg-primary text-white px-4 rounded-lg">Add</button>
+                                        <button type="submit" className="bg-accent text-white px-4 rounded-lg hover:bg-accent/90 transition-colors">Add</button>
                                     </div>
                                 </form>
                             </div>
@@ -254,17 +254,17 @@ const UnifiedDashboard = ({ id, device }) => {
                                 <p className="text-center text-sm text-secondary py-4 italic">No manual outputs configured</p>
                             ) : (
                                 outputs.map(output => (
-                                    <div key={output.id} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                                    <div key={output.id} className="bg-surface/40 p-3 rounded-xl border border-white/5 shadow-sm flex items-center justify-between hover:bg-surface/60 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <Power size={18} className={output.is_active ? "text-green-500" : "text-slate-400"} />
+                                            <Power size={18} className={output.is_active ? "text-green-400" : "text-slate-600"} />
                                             <div>
-                                                <h4 className="font-medium text-primary text-sm">{output.output_name}</h4>
+                                                <h4 className="font-medium text-white text-sm">{output.output_name}</h4>
                                                 <p className="text-[10px] text-secondary font-mono">GPIO {output.gpio_pin}</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => toggleOutput(output)}
-                                            className={`w-10 h-5 rounded-full transition-colors relative ${output.is_active ? 'bg-primary' : 'bg-slate-300'}`}
+                                            className={`w-10 h-5 rounded-full transition-colors relative ${output.is_active ? 'bg-accent shadow-[0_0_10px_rgba(111,45,189,0.4)]' : 'bg-gray-700'}`}
                                         >
                                             <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${output.is_active ? 'left-6' : 'left-1'}`}></div>
                                         </button>
@@ -275,21 +275,24 @@ const UnifiedDashboard = ({ id, device }) => {
                     </div>
 
                     <div className="card-premium p-6 flex-1 min-h-[250px]">
-                        <h3 className="text-lg font-bold text-primary mb-4">Gas Trends</h3>
+                        <h3 className="text-lg font-bold text-white mb-4">Gas Trends</h3>
                         <div className="h-[200px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={gasReadings}>
                                     <defs>
                                         <linearGradient id="colorGasCombined" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#2d3436" stopOpacity={0.1} />
-                                            <stop offset="95%" stopColor="#2d3436" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#A663CC" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#A663CC" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f2f6" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                                     <XAxis dataKey="timestamp" hide />
                                     <YAxis hide />
-                                    <Tooltip />
-                                    <Area type="monotone" dataKey="gas" stroke="#2d3436" fill="url(#colorGasCombined)" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1D162B', borderColor: '#2d2640', color: '#fff' }}
+                                        itemStyle={{ color: '#A663CC' }}
+                                    />
+                                    <Area type="monotone" dataKey="gas" stroke="#A663CC" strokeWidth={2} fill="url(#colorGasCombined)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>

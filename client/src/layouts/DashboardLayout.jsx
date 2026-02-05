@@ -26,8 +26,8 @@ const DashboardLayout = () => {
                 className={clsx(
                     "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full",
                     isActive
-                        ? "bg-accent text-white shadow-md font-medium"
-                        : "text-secondary hover:bg-gray-100 hover:text-primary"
+                        ? "bg-accent/90 text-white shadow-[0_0_15px_rgba(111,45,189,0.5)] font-medium border border-accent/20"
+                        : "text-secondary hover:bg-white/5 hover:text-white"
                 )}
             >
                 <Icon size={20} />
@@ -39,7 +39,7 @@ const DashboardLayout = () => {
     return (
         <div className="flex h-screen bg-background relative overflow-hidden">
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-border p-4 flex justify-between items-center shadow-sm">
+            <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border p-4 flex justify-between items-center shadow-sm">
                 <div className="flex items-center space-x-2">
                     <span className="text-xl font-bold tracking-tight text-primary">TRONIX<span className="font-light">365</span></span>
                 </div>
@@ -61,7 +61,7 @@ const DashboardLayout = () => {
 
             {/* Sidebar */}
             <aside className={clsx(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-border transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col shadow-2xl md:shadow-none",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-surface/30 backdrop-blur-xl border-r border-border transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col shadow-2xl md:shadow-none",
                 mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-8 hidden md:block">
