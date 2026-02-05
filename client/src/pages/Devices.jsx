@@ -183,6 +183,7 @@ const Devices = () => {
                             >
                                 <option value="gas_sensor">Gas Sensor Device</option>
                                 <option value="ldr_sensor">LDR Sensor Device</option>
+                                <option value="combined_sensor">Combined Sensor (Gas + LDR)</option>
                             </select>
 
                             <div className="flex space-x-3">
