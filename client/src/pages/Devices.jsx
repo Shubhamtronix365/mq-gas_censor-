@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Plus, Server, Activity, AlertTriangle, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Devices = () => {
     const [devices, setDevices] = useState([]);
@@ -60,148 +61,222 @@ const Devices = () => {
         }
     };
 
+    // Card Variants
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const item = {
+        hidden: { opacity: 0, scale: 0.9 },
+        show: { opacity: 1, scale: 1 }
+    };
+
     return (
         <div className="relative">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-primary">Devices</h1>
-                    <p className="text-secondary">Manage your connected ESP32 nodes</p>
+            <div className="flex justify-between items-center mb-10">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-violet-200">Devices</h1>
+                    <p className="text-slate-400 font-light text-lg">Manage your connected nodes</p>
                 </div>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowAddModal(true)}
-                    className="btn-primary flex items-center space-x-2"
+                    className="neo-btn-primary flex items-center space-x-2"
                 >
-                    <Plus size={18} />
-                    <span>Add Device</span>
-                </button>
+                    <Plus size={20} />
+                    <span>Deploy Node</span>
+                </motion.button>
             </div>
 
             {loading ? (
-                <div className="text-center py-20 text-secondary">Loading devices...</div>
-            ) : devices.length === 0 ? (
-                <div className="text-center py-20 bg-white/10 rounded-xl border border-white/20">
-                    <Server className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                    <h3 className="text-lg font-medium text-white">No devices found</h3>
-                    <p className="text-gray-400 mb-6">Add your first ESP32 device to get started</p>
-                    <button onClick={() => setShowAddModal(true)} className="btn-primary">
-                        Add Device
-                    </button>
+                <div className="flex justify-center py-40">
+                    <div className="w-10 h-10 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin"></div>
                 </div>
+            ) : devices.length === 0 ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-32 rounded-3xl border border-dashed border-white/10 bg-white/5"
+                >
+                    <div className="p-4 rounded-full bg-slate-800/50 mb-4">
+                        <Server className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-medium text-white">No nodes active</h3>
+                    <p className="text-slate-400 mb-8 max-w-xs text-center leading-relaxed">System is idle. Deploy your first sensor node to start monitoring.</p>
+                    <button onClick={() => setShowAddModal(true)} className="neo-btn bg-slate-700 hover:bg-slate-600 text-white">
+                        Deploy Now
+                    </button>
+                </motion.div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <motion.div
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                >
                     {devices.map((device) => (
-                        <Link to={`/devices/${device.device_id}`} key={device.device_id} className="card-premium p-6 group block">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-gray-50 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                                    <Server size={24} />
+                        <Link to={`/devices/${device.device_id}`} key={device.device_id}>
+                            <motion.div
+                                variants={item}
+                                whileHover={{ y: -5 }}
+                                className="neo-card p-6 h-full flex flex-col justify-between group"
+                            >
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="p-3 rounded-2xl bg-white/5 border border-white/5 group-hover:border-violet-500/30 group-hover:bg-violet-500/10 transition-colors">
+                                        <Server size={24} className="text-violet-200 group-hover:text-violet-400" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                            </span>
+                                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Online</span>
+                                        </div>
+                                        <button
+                                            onClick={(e) => handleDeleteClick(e, device.device_id)}
+                                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-end space-y-2">
-                                    <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-secondary">
-                                        {device.device_id}
-                                    </span>
-                                    <button
-                                        onClick={(e) => handleDeleteClick(e, device.device_id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                                        title="Delete Device"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-1 tracking-tight">
+                                        {device.device_type === 'ldr_sensor' ? 'LightNode' :
+                                            device.device_type === 'combined_sensor' ? 'FusionNode' : 'GasNode'}
+                                    </h3>
+                                    <p className="text-sm text-slate-400 font-mono tracking-wide opacity-60 mb-4">
+                                        ID: {device.device_id}
+                                    </p>
+
+                                    <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">
+                                            {device.device_type === 'combined_sensor' ? 'Multi-Sensor' : 'Single Point'}
+                                        </span>
+                                        <Activity size={16} className="text-slate-600 group-hover:text-violet-400 transition-colors" />
+                                    </div>
                                 </div>
-                            </div>
-
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">
-                                {device.device_type === 'ldr_sensor' ? 'LDR Sensor Node' : 'Gas Sensor Node'}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                {device.device_type === 'ldr_sensor' ? 'Light sensing & automation' : 'Air quality monitoring'}
-                            </p>
-
-                            <div className="flex items-center space-x-2 text-sm text-gray-500">
-                                <Activity size={16} />
-                                <span>Active Monitoring</span>
-                            </div>
+                            </motion.div>
                         </Link>
                     ))}
-                </div>
+                </motion.div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deviceToDelete && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl transform transition-all scale-100 animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-                            <AlertTriangle className="h-6 w-6 text-red-600" />
-                        </div>
-                        <div className="text-center">
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Device?</h3>
-                            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                                Are you sure you want to permanently delete device <span className="font-mono font-bold text-gray-800 bg-gray-100 px-1 rounded">{deviceToDelete}</span>?
-                                <br />This action cannot be undone.
+            {/* Delete Modal */}
+            <AnimatePresence>
+                {deviceToDelete && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                            onClick={() => setDeviceToDelete(null)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="neo-card p-8 w-full max-w-sm relative z-10 bg-[#0f172a] shadow-2xl"
+                        >
+                            <div className="flex justify-center mb-6">
+                                <div className="p-4 bg-rose-500/10 rounded-full text-rose-500 border border-rose-500/20">
+                                    <AlertTriangle size={32} />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-white text-center mb-2">Terminating Node</h3>
+                            <p className="text-slate-400 text-center mb-8 text-sm">
+                                Are you sure you want to decouple <span className="text-white font-mono bg-white/10 px-1 py-0.5 rounded">{deviceToDelete}</span>? This action is irreversible.
                             </p>
-                        </div>
-                        <div className="flex space-x-3">
-                            <button
-                                type="button"
-                                onClick={() => setDeviceToDelete(null)}
-                                className="flex-1 py-2.5 px-4 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all duration-200"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={confirmDelete}
-                                className="flex-1 py-2.5 px-4 bg-red-600 border border-transparent rounded-lg text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-lg shadow-red-600/20 transition-all duration-200"
-                            >
-                                Delete Device
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Add Device Modal */}
-            {showAddModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
-                        <h2 className="text-xl font-bold mb-4 text-gray-900">Add New Device</h2>
-                        <form onSubmit={handleAddDevice}>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Device ID</label>
-                            <input
-                                type="text"
-                                required
-                                className="input-field mb-4"
-                                placeholder="e.g. ESP32_01"
-                                value={newDeviceId}
-                                onChange={(e) => setNewDeviceId(e.target.value)}
-                            />
-
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Device Type</label>
-                            <select
-                                className="input-field mb-6"
-                                value={newDeviceType}
-                                onChange={(e) => setNewDeviceType(e.target.value)}
-                            >
-                                <option value="gas_sensor">Gas Sensor Device</option>
-                                <option value="ldr_sensor">LDR Sensor Device</option>
-                                <option value="combined_sensor">Combined Sensor (Gas + LDR)</option>
-                            </select>
-
-                            <div className="flex space-x-3">
+                            <div className="grid grid-cols-2 gap-4">
                                 <button
-                                    type="button"
-                                    onClick={() => setShowAddModal(false)}
-                                    className="flex-1 py-2 rounded-lg border border-border hover:bg-gray-50 transition-colors"
+                                    onClick={() => setDeviceToDelete(null)}
+                                    className="neo-btn bg-white/5 text-white hover:bg-white/10"
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="flex-1 btn-primary py-2">
-                                    Add Device
+                                <button
+                                    onClick={confirmDelete}
+                                    className="neo-btn bg-rose-600 text-white hover:bg-rose-500 shadow-lg shadow-rose-900/20"
+                                >
+                                    Terminate
                                 </button>
                             </div>
-                        </form>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
+
+            {/* Add Modal */}
+            <AnimatePresence>
+                {showAddModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                            onClick={() => setShowAddModal(false)}
+                        />
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 20, opacity: 0 }}
+                            className="neo-card p-8 w-full max-w-sm relative z-10 bg-[#0f172a]"
+                        >
+                            <h2 className="text-2xl font-bold mb-6 text-white">Deploy New Node</h2>
+                            <form onSubmit={handleAddDevice} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Device ID</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="neo-input"
+                                        placeholder="e.g. ESP32_DELTA"
+                                        value={newDeviceId}
+                                        onChange={(e) => setNewDeviceId(e.target.value)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Configuration Type</label>
+                                    <div className="relative">
+                                        <select
+                                            className="neo-input appearance-none bg-white/5"
+                                            value={newDeviceType}
+                                            onChange={(e) => setNewDeviceType(e.target.value)}
+                                        >
+                                            <option value="gas_sensor" className="bg-slate-800">Gas Sensor Node</option>
+                                            <option value="ldr_sensor" className="bg-slate-800">LDR Sensor Node</option>
+                                            <option value="combined_sensor" className="bg-slate-800">Fusion Node (Gas + LDR)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAddModal(false)}
+                                        className="neo-btn bg-white/5 text-white hover:bg-white/10"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="neo-btn-primary">
+                                        Deploy
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

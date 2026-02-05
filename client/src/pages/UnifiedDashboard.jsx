@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Thermometer, Droplets, Wind, Activity, Sun, Zap, Power, Plus, Lightbulb, Key, Copy, Check } from "lucide-react";
+import { Thermometer, Droplets, Wind, Activity, Sun, Zap, Power, Plus, Key, Copy, Check, Waves } from "lucide-react";
 import AutoBulb from "../components/AutoBulb";
 import { clsx } from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
 
 const UnifiedDashboard = ({ id, device }) => {
     const [gasReadings, setGasReadings] = useState([]);
@@ -92,214 +93,291 @@ const UnifiedDashboard = ({ id, device }) => {
         }
     };
 
-    const SensorCard = ({ title, value, unit, icon: Icon, colorClass }) => (
-        <div className="card-premium p-6 flex flex-col items-center justify-center text-center hover:ring-2 hover:ring-primary/20 transition-all">
-            <div className={clsx("p-4 rounded-full mb-4", colorClass)}>
-                <Icon size={32} />
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const item = {
+        hidden: { opacity: 0, y: 10 },
+        show: { opacity: 1, y: 0 }
+    };
+
+    const SensorCard = ({ title, value, unit, icon: Icon, color, delay }) => (
+        <motion.div
+            variants={item}
+            className="neo-card p-5 relative overflow-hidden group"
+        >
+            <div className={`absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity`}>
+                <Icon size={48} className={`text-${color}-400`} />
             </div>
-            <h3 className="text-secondary text-sm font-medium uppercase tracking-wide mb-1">{title}</h3>
-            <div className="text-3xl font-bold text-primary">
-                {value ?? "--"} <span className="text-lg text-secondary font-normal">{unit}</span>
+
+            <div className={`p-3 rounded-2xl w-fit mb-4 bg-${color}-500/10 border border-${color}-500/20 text-${color}-400`}>
+                <Icon size={24} />
             </div>
-        </div>
+
+            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">{title}</h3>
+            <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-white tracking-tight">
+                    {value ?? "--"}
+                </span>
+                <span className="text-sm text-slate-500 font-medium">{unit}</span>
+            </div>
+        </motion.div>
     );
 
     return (
-        <div className="max-w-[1600px] mx-auto animate-fade-in-up">
+        <motion.div
+            initial="hidden"
+            animate="show"
+            variants={container}
+            className="max-w-[1920px] mx-auto space-y-8 pb-20"
+        >
             {/* Header */}
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 border-b border-white/5 pb-8">
                 <div>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-highlight flex items-center gap-3 tracking-tight">
-                        {id}
-                        <span className="text-xs px-3 py-1 rounded-full border bg-accent/10 text-highlight border-accent/20 font-bold shadow-sm backdrop-blur-md">
-                            COMBINED SYSTEM
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3 mb-2"
+                    >
+                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 uppercase tracking-widest">
+                            Fusion Node
                         </span>
+                        {loading && <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>}
+                    </motion.div>
+                    <h1 className="text-5xl font-bold text-white tracking-tight mb-2">
+                        {id}
                     </h1>
-                    <p className="text-secondary mt-1 font-medium">Integrated Gas & Light Monitoring</p>
+                    <p className="text-slate-400 max-w-lg leading-relaxed">
+                        Real-time telemetry and unified control interface.
+                    </p>
                 </div>
 
-                <div className="flex flex-col items-end gap-3 w-full xl:w-auto">
-                    {device && (
-                        <div className="bg-surface/50 backdrop-blur-sm p-1 rounded-xl border border-border shadow-sm w-full md:w-auto flex items-center gap-2 pr-4 transition-all hover:shadow-md hover:border-accent/40">
-                            <div className="bg-accent/10 px-3 py-2 rounded-lg border-r border-accent/10">
-                                <p className="text-[10px] text-highlight font-bold uppercase tracking-wider">Device Token</p>
-                            </div>
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <Key size={14} className="text-accent shrink-0" />
-                                <code className="text-xs font-mono text-primary select-all truncate">{device.device_token}</code>
-                            </div>
-                            <button
-                                onClick={copyToClipboard}
-                                className="p-1.5 hover:bg-white/5 rounded-lg transition-colors text-secondary hover:text-white relative group"
-                                title="Copy"
-                            >
-                                {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                            </button>
+                {device && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="neo-card px-4 py-2 flex items-center gap-4 group cursor-pointer"
+                        onClick={copyToClipboard}
+                    >
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Secure Token</span>
+                            <code className="text-sm font-mono text-violet-300 group-hover:text-violet-200 transition-colors">
+                                {device.device_token?.substring(0, 12)}...
+                            </code>
                         </div>
-                    )}
-                </div>
+                        <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
+                            {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} className="text-slate-400" />}
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
-            {/* Gas Section */}
-            <div className="mb-10">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Wind className="text-accent" /> Gas & Environment
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Bento Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+                {/* 1. Environment Metrics - Takes full width on mobile, 3 cols on large */}
+                <div className="xl:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <SensorCard
-                        title="Gas Level"
+                        title="Air Quality"
                         value={latestGas?.gas ? Number(latestGas.gas).toFixed(0) : null}
-                        unit="ppm"
+                        unit="PPM"
                         icon={Wind}
-                        colorClass="bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 ring-1 ring-gray-200"
+                        color="amber"
                     />
                     <SensorCard
                         title="Temperature"
                         value={latestGas?.temperature ? Number(latestGas.temperature).toFixed(1) : null}
                         unit="°C"
                         icon={Thermometer}
-                        colorClass="bg-gradient-to-br from-orange-50 to-orange-100 text-orange-700 ring-1 ring-orange-200"
+                        color="rose"
                     />
                     <SensorCard
                         title="Humidity"
                         value={latestGas?.humidity ? Number(latestGas.humidity).toFixed(1) : null}
                         unit="%"
                         icon={Droplets}
-                        colorClass="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 ring-1 ring-blue-200"
+                        color="cyan"
                     />
                     <SensorCard
-                        title="Distance"
+                        title="Proximity"
                         value={latestGas?.distance ? Number(latestGas.distance).toFixed(1) : null}
-                        unit="cm"
+                        unit="CM"
                         icon={Activity}
-                        colorClass="bg-gradient-to-br from-purple-50 to-purple-100 text-purple-700 ring-1 ring-purple-200"
+                        color="violet"
                     />
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
-                {/* LDR Section */}
-                <div>
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <Sun className="text-yellow-500" /> Light & Bulb Control
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                        <div className="card-premium p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-yellow-50 to-yellow-100/50 border-yellow-200">
-                            <div className="p-4 rounded-full bg-yellow-100 text-yellow-600 mb-4 ring-1 ring-yellow-200">
-                                <Sun size={32} />
+                {/* 2. Light Status - Right Column */}
+                <div className="xl:col-span-1 min-h-[160px]">
+                    <motion.div variants={item} className="neo-card p-6 h-full flex flex-col justify-between overflow-hidden relative">
+                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-yellow-500/20 blur-[60px] rounded-full pointer-events-none"></div>
+
+                        <div className="flex justify-between items-start z-10">
+                            <div>
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ambient Light</h3>
+                                <div className="text-4xl font-bold text-white">
+                                    {latestLdr?.analog_value ?? "--"}
+                                </div>
                             </div>
-                            <h3 className="text-secondary text-sm font-medium uppercase tracking-wide">Analog Reading</h3>
-                            <div className="text-3xl font-bold text-slate-800 mt-1">
-                                {latestLdr?.analog_value ?? "--"} <span className="text-lg text-secondary font-normal">/ 1050</span>
+                            <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-400 border border-yellow-500/20">
+                                <Sun size={24} />
                             </div>
                         </div>
-                        <div className="card-premium p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200">
-                            <div className={`p-4 rounded-full mb-4 ring-1 ${latestLdr?.digital_value ? 'bg-blue-100 text-blue-600 ring-blue-200' : 'bg-gray-100 text-gray-400 ring-gray-200'}`}>
-                                <Zap size={32} />
+
+                        <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between z-10">
+                            <span className="text-xs text-slate-500 font-medium">Auto-Logic Status</span>
+                            <div className={`flex items-center gap-2 px-2 py-1 rounded-lg ${latestLdr?.digital_value ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-400'}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${latestLdr?.digital_value ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`}></div>
+                                <span className="text-[10px] font-bold uppercase">{latestLdr?.digital_value ? 'Active' : 'Standby'}</span>
                             </div>
-                            <h3 className="text-secondary text-sm font-medium uppercase tracking-wide">Digital Status</h3>
-                            <div className="text-3xl font-bold text-slate-800 mt-1">
-                                {latestLdr?.digital_value ? "Active (1)" : "Inactive (0)"}
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* 3. Main Chart - Large area */}
+                <motion.div variants={item} className="xl:col-span-3 neo-card flex flex-col min-h-[350px]">
+                    <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-violet-600/20 rounded-lg text-violet-400">
+                                <Waves size={20} />
                             </div>
+                            <h3 className="font-bold text-white tracking-tight">Air Quality Trends</h3>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <span className="text-[10px] font-mono text-slate-500 bg-white/5 px-2 py-1 rounded">LIVE NOW</span>
                         </div>
                     </div>
-                    <div className="h-[300px] mb-6">
+
+                    <div className="flex-1 w-full min-h-[250px] relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={gasReadings} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorGasNeo" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                <XAxis dataKey="timestamp" hide />
+                                <YAxis hide />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#020617',
+                                        borderColor: 'rgba(139, 92, 246, 0.2)',
+                                        color: '#fff',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 10px 40px -10px rgba(0,0,0,0.5)'
+                                    }}
+                                    itemStyle={{ color: '#a78bfa' }}
+                                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="gas"
+                                    stroke="#8b5cf6"
+                                    strokeWidth={3}
+                                    fill="url(#colorGasNeo)"
+                                    animationDuration={1500}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
+
+                {/* 4. Controls & Automation - Right Column Stack */}
+                <div className="xl:col-span-1 space-y-6">
+                    {/* Bulb Visualizer */}
+                    <motion.div variants={item} className="h-[200px]">
                         <AutoBulb
                             isOn={latestLdr?.digital_value ?? false}
                             brightness={latestLdr?.analog_value ?? 0}
                         />
-                    </div>
-                </div>
+                    </motion.div>
 
-                {/* Controls & Charts */}
-                <div className="flex flex-col gap-6">
-                    <div className="card-premium p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">Bulb Controls</h3>
+                    {/* Manual Controls */}
+                    <motion.div variants={item} className="neo-card p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-2">
+                                <Zap size={18} className="text-yellow-400" />
+                                <h3 className="font-bold text-white text-sm">Manual Controls</h3>
+                            </div>
                             <button
                                 onClick={() => setShowAddOutput(!showAddOutput)}
-                                className="bg-accent hover:bg-accent/80 text-white p-2 rounded-lg transition-colors shadow-lg shadow-accent/20"
-                                title="Add Output"
+                                className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
                             >
-                                <Plus size={20} />
+                                <Plus size={16} />
                             </button>
                         </div>
+
                         {showAddOutput && (
-                            <div className="bg-surface/50 p-4 rounded-xl border border-border mb-4">
-                                <form onSubmit={handleAddOutput}>
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="bg-white/5 p-3 rounded-xl border border-white/10 mb-4 overflow-hidden"
+                            >
+                                <form onSubmit={handleAddOutput} className="space-y-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Label"
+                                        className="neo-input text-xs py-2"
+                                        required
+                                        value={newOutputName}
+                                        onChange={e => setNewOutputName(e.target.value)}
+                                    />
                                     <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            placeholder="Name"
-                                            className="input-field flex-1"
-                                            required
-                                            value={newOutputName}
-                                            onChange={e => setNewOutputName(e.target.value)}
-                                        />
                                         <input
                                             type="number"
                                             placeholder="GPIO"
-                                            className="input-field w-24"
+                                            className="neo-input text-xs py-2 w-20"
                                             required
                                             value={newOutputPin}
                                             onChange={e => setNewOutputPin(e.target.value)}
                                         />
-                                        <button type="submit" className="bg-accent text-white px-4 rounded-lg hover:bg-accent/90 transition-colors">Add</button>
+                                        <button type="submit" className="flex-1 bg-violet-600 text-white rounded-lg text-xs font-bold hover:bg-violet-500 transition-colors">Add</button>
                                     </div>
                                 </form>
-                            </div>
+                            </motion.div>
                         )}
-                        <div className="space-y-3">
+
+                        <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                             {outputs.length === 0 ? (
-                                <p className="text-center text-sm text-secondary py-4 italic">No manual outputs configured</p>
+                                <p className="text-center text-xs text-slate-600 py-8 border border-dashed border-white/5 rounded-xl">No manual switches</p>
                             ) : (
                                 outputs.map(output => (
-                                    <div key={output.id} className="bg-white/50 p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:bg-white transition-colors">
+                                    <div key={output.id} className="group p-3 rounded-xl bg-white/5 border border-white/5 hover:border-violet-500/30 transition-all flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <Power size={18} className={output.is_active ? "text-green-600" : "text-slate-400"} />
+                                            <div className={`p-2 rounded-lg ${output.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                                                <Power size={14} />
+                                            </div>
                                             <div>
-                                                <h4 className="font-medium text-slate-800 text-sm">{output.output_name}</h4>
-                                                <p className="text-[10px] text-slate-500 font-mono">GPIO {output.gpio_pin}</p>
+                                                <h4 className="font-bold text-white text-xs">{output.output_name}</h4>
+                                                <p className="text-[10px] text-slate-500 font-mono">PIN {output.gpio_pin}</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => toggleOutput(output)}
-                                            className={`w-10 h-5 rounded-full transition-colors relative ${output.is_active ? 'bg-accent shadow-[0_0_10px_rgba(111,45,189,0.4)]' : 'bg-gray-700'}`}
+                                            className={`relative w-11 h-6 rounded-full transition-all duration-300 ${output.is_active
+                                                    ? 'bg-violet-600 shadow-[0_0_15px_rgba(139,92,246,0.5)]'
+                                                    : 'bg-slate-700'
+                                                }`}
                                         >
-                                            <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${output.is_active ? 'left-6' : 'left-1'}`}></div>
+                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${output.is_active ? 'left-6' : 'left-1'
+                                                }`} />
                                         </button>
                                     </div>
                                 ))
                             )}
                         </div>
-                    </div>
-
-                    <div className="card-premium p-6 flex-1 min-h-[250px]">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4">Gas Trends</h3>
-                        <div className="h-[200px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={gasReadings}>
-                                    <defs>
-                                        <linearGradient id="colorGasCombined" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#A663CC" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#A663CC" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                                    <XAxis dataKey="timestamp" hide />
-                                    <YAxis hide />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#1D162B', borderColor: '#2d2640', color: '#fff' }}
-                                        itemStyle={{ color: '#A663CC' }}
-                                    />
-                                    <Area type="monotone" dataKey="gas" stroke="#A663CC" strokeWidth={2} fill="url(#colorGasCombined)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

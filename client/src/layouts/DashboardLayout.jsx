@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, LayoutDashboard, Server, User, Menu, X } from "lucide-react";
+import { LogOut, LayoutDashboard, Server, User, Menu, X, Zap } from "lucide-react";
 import { clsx } from 'clsx';
+import { motion, AnimatePresence } from "framer-motion";
+import LayoutWrapper from "./LayoutWrapper";
 
 const DashboardLayout = () => {
     const { logout } = useAuth();
@@ -24,83 +26,97 @@ const DashboardLayout = () => {
                     setMobileMenuOpen(false);
                 }}
                 className={clsx(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full",
-                    isActive
-                        ? "bg-accent/90 text-white shadow-[0_0_15px_rgba(111,45,189,0.5)] font-medium border border-accent/20"
-                        : "text-secondary hover:bg-white/5 hover:text-white"
+                    "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full relative overflow-hidden group",
+                    isActive ? "text-white bg-white/10" : "text-slate-400 hover:text-white"
                 )}
             >
-                <Icon size={20} />
-                <span>{label}</span>
+                {isActive && (
+                    <motion.div
+                        layoutId="activeNav"
+                        className="absolute inset-0 bg-violet-600/20 border-l-2 border-violet-500"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    />
+                )}
+                <Icon size={20} className={clsx("relative z-10", isActive ? "text-violet-400" : "group-hover:text-violet-400 transition-colors")} />
+                <span className="relative z-10 font-medium">{label}</span>
             </button>
         )
     }
 
     return (
-        <div className="flex h-screen bg-background relative overflow-hidden">
+        <LayoutWrapper className="flex h-screen">
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border p-4 flex justify-between items-center shadow-sm">
+            <div className="md:hidden fixed top-0 inset-x-0 z-50 bg-[#020617]/80 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <span className="text-xl font-bold tracking-tight text-primary">TRONIX<span className="font-light">365</span></span>
+                    <Zap className="text-violet-500" size={24} />
+                    <span className="text-xl font-bold tracking-tight text-white">TRONIX<span className="font-light text-violet-400">365</span></span>
                 </div>
                 <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="p-2 -mr-2 text-secondary hover:text-primary rounded-lg"
+                    className="p-2 -mr-2 text-slate-400 hover:text-white rounded-lg"
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
             </div>
 
-            {/* Backdrop for mobile */}
-            {mobileMenuOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm animate-in fade-in duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                />
-            )}
-
             {/* Sidebar */}
-            <aside className={clsx(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-surface/30 backdrop-blur-xl border-r border-border transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col shadow-2xl md:shadow-none",
-                mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            )}>
-                <div className="p-8 hidden md:block">
-                    <h1 className="text-2xl font-bold tracking-tight text-primary">TRONIX<span className="font-light">365</span></h1>
-                    <p className="text-xs text-secondary mt-1 tracking-widest uppercase">Indianiiot</p>
-                </div>
-
-                {/* Mobile Sidebar Header */}
-                <div className="p-6 md:hidden flex justify-between items-center border-b border-border">
-                    <h1 className="text-xl font-bold tracking-tight text-primary">Menu</h1>
-                    <button onClick={() => setMobileMenuOpen(false)}>
-                        <X size={20} className="text-secondary" />
-                    </button>
-                </div>
-
-                <nav className="flex-1 px-4 space-y-2 mt-6 md:mt-0">
-                    <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
-                    <NavItem to="/devices" icon={Server} label="Devices" />
-                    <NavItem to="/profile" icon={User} label="Profile" />
-                </nav>
-
-                <div className="p-4 border-t border-border">
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center space-x-3 px-4 py-3 text-danger hover:bg-red-50 rounded-xl w-full transition-colors"
+            <AnimatePresence mode="wait">
+                {(mobileMenuOpen || window.innerWidth >= 768) && (
+                    <motion.aside
+                        initial={{ x: -300, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -300, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className={clsx(
+                            "fixed inset-y-0 left-0 z-40 w-72 bg-[#020617]/50 backdrop-blur-2xl border-r border-white/5 flex flex-col md:relative",
+                            !mobileMenuOpen && "hidden md:flex"
+                        )}
                     >
-                        <LogOut size={20} />
-                        <span>Logout</span>
-                    </button>
-                </div>
-            </aside>
+                        <div className="p-8 hidden md:block">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-violet-600/20 rounded-lg border border-violet-500/30">
+                                    <Zap className="text-violet-400" size={24} />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold tracking-tight text-white">TRONIX<span className="text-violet-500">365</span></h1>
+                                    <p className="text-[10px] text-slate-500 tracking-[0.2em] uppercase font-bold">Indianiiot</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Sidebar Header */}
+                        <div className="p-6 md:hidden flex justify-between items-center border-b border-white/5 pt-20">
+                            <h1 className="text-xl font-bold tracking-tight text-white">Menu</h1>
+                        </div>
+
+                        <nav className="flex-1 px-6 space-y-2 mt-8 md:mt-0">
+                            <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
+                            <NavItem to="/devices" icon={Server} label="Devices" />
+                            <NavItem to="/profile" icon={User} label="Profile" />
+                        </nav>
+
+                        <div className="p-6 border-t border-white/5">
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center space-x-3 px-4 py-3 text-rose-400 hover:bg-rose-500/10 rounded-xl w-full transition-all group"
+                            >
+                                <LogOut size={20} className="group-hover:rotate-12 transition-transform" />
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </motion.aside>
+                )}
+            </AnimatePresence>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto p-4 md:p-8 pt-20 md:pt-8 w-full">
-                <div className="max-w-7xl mx-auto">
+            <main className="flex-1 overflow-auto w-full relative z-0">
+                <div className="max-w-[1920px] mx-auto p-4 md:p-8 pt-24 md:pt-8 min-h-screen">
                     <Outlet />
                 </div>
             </main>
-        </div>
+        </LayoutWrapper>
     );
 };
 

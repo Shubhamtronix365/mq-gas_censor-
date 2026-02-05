@@ -1,63 +1,60 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @theme {
-  --color-background: #171123;
-  --color-surface: #1D162B;
-  --color-primary: #FBFBFB;
-  --color-secondary: #d1d5db;
-  --color-accent: #6F2DBD;
-  --color-highlight: #A663CC;
-  --color-warning: #fdcb6e;
-  --color-danger: #ff7675;
-  --color-safe: #55efc4;
-  --color-border: #2d2640;
+  /* Neo-Glass Palette */
+  --color-background: #020617;
+  /* Deep Midnight */
+  --color-glass: rgba(255, 255, 255, 0.03);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-accent: #8b5cf6;
+  /* Cyber Violet */
+  --color-highlight: #10b981;
+  /* Neon Emerald */
 
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
 
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-neon: 0 0 20px rgba(139, 92, 246, 0.15);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 @layer base {
   body {
-    background: radial-gradient(circle at top right, #1D162B, #171123);
-    color: var(--color-primary);
+    background-color: var(--color-background);
+    color: #e2e8f0;
     font-family: var(--font-sans);
     min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-accent text-white rounded-lg hover:bg-primary transition-colors duration-200 font-medium shadow-sm active:scale-95;
+
+  /* Neo-Glass Card Utility */
+  .neo-card {
+    @apply relative overflow-hidden rounded-2xl border border-[var(--color-glass-border)] bg-[var(--color-glass)] backdrop-blur-xl transition-all duration-300;
   }
 
-  .card-premium {
-    @apply rounded-xl shadow-lg transition-all duration-300;
-    background: rgba(255, 255, 255, 0.95);
-    /* Light Card */
-    color: #171123;
-    /* Black/Dark Text */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  .neo-card:hover {
+    box-shadow: var(--shadow-neon);
+    border-color: rgba(139, 92, 246, 0.3);
+    background: rgba(255, 255, 255, 0.05);
   }
 
-  .card-premium:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    /* Stronger shadow */
+  /* Neo Input */
+  .neo-input {
+    @apply w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 outline-none transition-all duration-300;
   }
 
-  .input-field {
-    @apply w-full px-4 py-2 rounded-lg outline-none transition-all duration-200 text-slate-800 placeholder-slate-400;
-    background: #f1f2f6;
-    border: 1px solid #e0e0e0;
+  .neo-input:focus {
+    @apply border-violet-500/50 bg-white/10 shadow-[0_0_15px_rgba(139, 92, 246, 0.1)];
   }
 
-  .input-field:focus {
-    background: #ffffff;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(111, 45, 189, 0.2);
+  /* Neo Button */
+  .neo-btn {
+    @apply px-6 py-2 rounded-xl font-medium transition-all duration-300 active:scale-95;
+  }
+
+  .neo-btn-primary {
+    @apply neo-btn bg-violet-600 text-white hover:bg-violet-500 hover:shadow-[0_0_20px_rgba(139, 92, 246, 0.4)];
   }
 }
