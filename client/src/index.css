@@ -35,25 +35,28 @@
 
   .card-premium {
     @apply rounded-xl shadow-lg transition-all duration-300;
-    background: linear-gradient(145deg, rgba(29, 22, 43, 0.9), rgba(23, 17, 35, 0.95));
-    border: 1px solid rgba(166, 99, 204, 0.15);
-    /* Lavender hint */
+    background: rgba(255, 255, 255, 0.95);
+    /* Light Card */
+    color: #171123;
+    /* Black/Dark Text */
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   }
 
   .card-premium:hover {
-    border-color: rgba(166, 99, 204, 0.4);
-    box-shadow: 0 8px 30px rgba(111, 45, 189, 0.15);
-    /* Purple accent glow */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    /* Stronger shadow */
   }
 
   .input-field {
-    @apply w-full px-4 py-2 rounded-lg outline-none transition-all duration-200 text-primary placeholder-secondary;
-    background: rgba(23, 17, 35, 0.6);
-    border: 1px solid var(--color-border);
+    @apply w-full px-4 py-2 rounded-lg outline-none transition-all duration-200 text-slate-800 placeholder-slate-400;
+    background: #f1f2f6;
+    border: 1px solid #e0e0e0;
   }
 
   .input-field:focus {
+    background: #ffffff;
     border-color: var(--color-accent);
     box-shadow: 0 0 0 2px rgba(111, 45, 189, 0.2);
   }
