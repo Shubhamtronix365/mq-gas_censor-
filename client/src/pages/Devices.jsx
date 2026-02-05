@@ -79,10 +79,10 @@ const Devices = () => {
             {loading ? (
                 <div className="text-center py-20 text-secondary">Loading devices...</div>
             ) : devices.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-xl border border-border">
+                <div className="text-center py-20 bg-white/10 rounded-xl border border-white/20">
                     <Server className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                    <h3 className="text-lg font-medium text-primary">No devices found</h3>
-                    <p className="text-secondary mb-6">Add your first ESP32 device to get started</p>
+                    <h3 className="text-lg font-medium text-white">No devices found</h3>
+                    <p className="text-gray-400 mb-6">Add your first ESP32 device to get started</p>
                     <button onClick={() => setShowAddModal(true)} className="btn-primary">
                         Add Device
                     </button>
@@ -109,14 +109,14 @@ const Devices = () => {
                                 </div>
                             </div>
 
-                            <h3 className="text-lg font-bold text-primary mb-1">
+                            <h3 className="text-lg font-bold text-gray-900 mb-1">
                                 {device.device_type === 'ldr_sensor' ? 'LDR Sensor Node' : 'Gas Sensor Node'}
                             </h3>
-                            <p className="text-sm text-secondary mb-4">
+                            <p className="text-sm text-gray-600 mb-4">
                                 {device.device_type === 'ldr_sensor' ? 'Light sensing & automation' : 'Air quality monitoring'}
                             </p>
 
-                            <div className="flex items-center space-x-2 text-sm text-secondary">
+                            <div className="flex items-center space-x-2 text-sm text-gray-500">
                                 <Activity size={16} />
                                 <span>Active Monitoring</span>
                             </div>
@@ -163,9 +163,9 @@ const Devices = () => {
             {showAddModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
-                        <h2 className="text-xl font-bold mb-4">Add New Device</h2>
+                        <h2 className="text-xl font-bold mb-4 text-gray-900">Add New Device</h2>
                         <form onSubmit={handleAddDevice}>
-                            <label className="block text-sm font-medium text-secondary mb-2">Device ID</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Device ID</label>
                             <input
                                 type="text"
                                 required
@@ -175,7 +175,7 @@ const Devices = () => {
                                 onChange={(e) => setNewDeviceId(e.target.value)}
                             />
 
-                            <label className="block text-sm font-medium text-secondary mb-2">Device Type</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Device Type</label>
                             <select
                                 className="input-field mb-6"
                                 value={newDeviceType}
