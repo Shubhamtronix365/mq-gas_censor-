@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import { User, Phone, Mail, Save, Loader, Camera, Shield, Trash2, Building, Briefcase, Clock, Key, LogOut, CheckCircle, Activity } from "lucide-react";
+import { User, Phone, Mail, Save, Loader, Camera, Shield, Trash2, Building, Briefcase, Clock, Key, LogOut, CheckCircle, Activity, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
