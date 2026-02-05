@@ -7,15 +7,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "#f8f9fa", // Soft off-white/gray
+        background: "#FBFBFB", // Off-white
         surface: "#ffffff",
-        primary: "#2d3436", // Dark gray/black for text/headers
-        secondary: "#636e72", // Muted gray for subtext
-        accent: "#00b894", // Muted green (Mint Leaf)
-        warning: "#fdcb6e", // Muted orange (Sunflower)
-        danger: "#ff7675", // Soft red (Pink Glamour)
-        safe: "#55efc4", // Soft green
-        border: "#dfe6e9",
+        primary: "#171123", // Deep Dark Purple/Black
+        secondary: "#636e72", // Muted gray (Keeping for neutrality)
+        accent: "#6F2DBD", // Brand Purple
+        highlight: "#A663CC", // Lavender
+        warning: "#fdcb6e",
+        danger: "#ff7675",
+        safe: "#55efc4",
+        border: "#e0e0e0", // Slightly darker for contrast on FBFBFB
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

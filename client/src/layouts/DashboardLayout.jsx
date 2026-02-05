@@ -26,7 +26,7 @@ const DashboardLayout = () => {
                 className={clsx(
                     "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full",
                     isActive
-                        ? "bg-primary text-white shadow-md font-medium"
+                        ? "bg-accent text-white shadow-md font-medium"
                         : "text-secondary hover:bg-gray-100 hover:text-primary"
                 )}
             >

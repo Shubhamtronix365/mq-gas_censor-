@@ -2,15 +2,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @theme {
-  --color-background: #f8f9fa;
+  --color-background: #FBFBFB;
   --color-surface: #ffffff;
-  --color-primary: #2d3436;
+  --color-primary: #171123;
   --color-secondary: #636e72;
-  --color-accent: #00b894;
+  --color-accent: #6F2DBD;
+  --color-highlight: #A663CC;
   --color-warning: #fdcb6e;
   --color-danger: #ff7675;
   --color-safe: #55efc4;
-  --color-border: #dfe6e9;
+  --color-border: #e0e0e0;
 
   --font-sans: 'Inter', sans-serif;
 
@@ -28,7 +29,7 @@
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-black transition-colors duration-200 font-medium shadow-sm active:scale-95;
+    @apply px-4 py-2 bg-accent text-white rounded-lg hover:bg-primary transition-colors duration-200 font-medium shadow-sm active:scale-95;
   }
 
   .card-premium {
