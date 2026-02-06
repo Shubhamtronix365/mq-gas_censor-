@@ -6,6 +6,7 @@ import AutoBulb from "../components/AutoBulb";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import UnifiedSensorCard from "../components/UnifiedSensorCard";
 
 const UnifiedDashboard = ({ id, device }) => {
     const [gasReadings, setGasReadings] = useState([]);
@@ -69,7 +70,23 @@ const UnifiedDashboard = ({ id, device }) => {
 
     const copyToClipboard = () => {
         if (device?.device_token) {
-            navigator.clipboard.writeText(device.device_token);
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(device.device_token);
+            } else {
+                // Fallback for HTTP/LAN
+                const textArea = document.createElement("textarea");
+                textArea.value = device.device_token;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand("copy");
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -141,43 +158,7 @@ const UnifiedDashboard = ({ id, device }) => {
         return null;
     };
 
-    const SensorCard = ({ title, value, unit, icon: Icon, color }) => (
-        <motion.div
-            variants={item}
-            className={clsx(
-                "neo-card p-5 relative overflow-hidden group border",
-                color === 'violet' ? 'border-violet-500/20 hover:border-violet-500/40' :
-                    color === 'amber' ? 'border-yellow-500/20 hover:border-yellow-500/40' :
-                        color === 'cyan' ? 'border-cyan-500/20 hover:border-cyan-500/40' :
-                            'border-rose-500/20 hover:border-rose-500/40'
-            )}
-        >
-            <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity duration-500`}>
-                <Icon size={64} className={clsx(
-                    color === 'violet' ? 'text-violet-500' :
-                        color === 'amber' ? 'text-yellow-500' :
-                            color === 'cyan' ? 'text-cyan-500' : 'text-rose-500'
-                )} />
-            </div>
 
-            <div className={clsx("p-3 rounded-2xl w-fit mb-4 border transition-colors duration-300",
-                color === 'violet' ? 'bg-violet-500/10 border-violet-500/20 text-violet-400 group-hover:bg-violet-500/20' :
-                    color === 'amber' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400 group-hover:bg-yellow-500/20' :
-                        color === 'cyan' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/20' :
-                            'bg-rose-500/10 border-rose-500/20 text-rose-400 group-hover:bg-rose-500/20'
-            )}>
-                <Icon size={24} />
-            </div>
-
-            <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">{title}</h3>
-            <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-white tracking-tight">
-                    {value ?? "--"}
-                </span>
-                <span className="text-sm text-slate-500 font-medium">{unit}</span>
-            </div>
-        </motion.div>
-    );
 
     return (
         <motion.div
@@ -223,36 +204,36 @@ const UnifiedDashboard = ({ id, device }) => {
             </motion.div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <motion.div variants={container} className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
                 {/* Column 1: Gas Stats (Violet Theme) */}
-                <div className="flex flex-col gap-4">
+                <motion.div variants={item} className="flex flex-col gap-4">
                     <div className="flex items-center gap-2 text-violet-400 mb-2 px-1">
                         <Waves size={16} />
                         <span className="text-xs font-bold uppercase tracking-widest">Environment</span>
                     </div>
-                    <SensorCard
+                    <UnifiedSensorCard
                         title="Air Quality"
                         value={latestGas?.gas ? Number(latestGas.gas).toFixed(0) : null}
                         unit="PPM"
                         icon={Wind}
                         color="violet"
                     />
-                    <SensorCard
+                    <UnifiedSensorCard
                         title="Temperature"
                         value={latestGas?.temperature ? Number(latestGas.temperature).toFixed(1) : null}
                         unit="°C"
                         icon={Thermometer}
                         color="rose"
                     />
-                    <SensorCard
+                    <UnifiedSensorCard
                         title="Humidity"
                         value={latestGas?.humidity ? Number(latestGas.humidity).toFixed(1) : null}
                         unit="%"
                         icon={Droplets}
                         color="cyan"
                     />
-                </div>
+                </motion.div>
 
                 {/* Column 2 & 3: Fusion Chart (Spans 2 cols) */}
                 <div className="lg:col-span-2 flex flex-col gap-6">
@@ -327,19 +308,26 @@ const UnifiedDashboard = ({ id, device }) => {
                 </div>
 
                 {/* Column 4: Light Stats & Controls (Amber Theme) */}
-                <div className="flex flex-col gap-4">
+                <motion.div variants={item} className="flex flex-col gap-4">
                     <div className="flex items-center gap-2 text-yellow-400 mb-2 px-1">
                         <Sun size={16} />
                         <span className="text-xs font-bold uppercase tracking-widest">Illumination</span>
                     </div>
 
-                    <SensorCard
+                    <UnifiedSensorCard
                         title="Intensity"
                         value={latestLdr?.analog_value ?? "--"}
                         unit="LUX"
                         icon={Sun}
                         color="amber"
                     />
+
+                    <motion.div variants={item}>
+                        <AutoBulb
+                            isOn={latestLdr?.digital_value}
+                            brightness={latestLdr?.analog_value ?? 0}
+                        />
+                    </motion.div>
 
                     <motion.div variants={item} className="neo-card p-5 flex flex-col gap-4 border border-white/5">
                         <div className="flex justify-between items-center">
@@ -384,19 +372,7 @@ const UnifiedDashboard = ({ id, device }) => {
 
 
                         <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-                            {/* Auto Bulb Status */}
-                            <div className="group p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${latestLdr?.digital_value ? 'bg-amber-500/20 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'bg-slate-800 text-slate-500'}`}>
-                                        <Sun size={14} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-white text-xs">AutoLogic</h4>
-                                        <p className="text-[10px] text-slate-500 font-mono">SENSOR CONTROL</p>
-                                    </div>
-                                </div>
-                                <div className={`w-2 h-2 rounded-full ${latestLdr?.digital_value ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`}></div>
-                            </div>
+
 
                             {/* Manual Outputs */}
                             {outputs.map(output => (
@@ -424,8 +400,8 @@ const UnifiedDashboard = ({ id, device }) => {
                             ))}
                         </div>
                     </motion.div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
         </motion.div>
     );
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Plus, Server, Activity, AlertTriangle, Trash2 } from "lucide-react";
+import { Plus, Server, Activity, AlertTriangle, Trash2, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -249,7 +249,7 @@ const Devices = () => {
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Configuration Type</label>
                                     <div className="relative">
                                         <select
-                                            className="neo-input appearance-none bg-white/5"
+                                            className="neo-input appearance-none bg-white/5 w-full pr-10"
                                             value={newDeviceType}
                                             onChange={(e) => setNewDeviceType(e.target.value)}
                                         >
@@ -257,6 +257,9 @@ const Devices = () => {
                                             <option value="ldr_sensor" className="bg-slate-800">LDR Sensor Node</option>
                                             <option value="combined_sensor" className="bg-slate-800">Fusion Node (Gas + LDR)</option>
                                         </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <ChevronDown size={16} />
+                                        </div>
                                     </div>
                                 </div>
 

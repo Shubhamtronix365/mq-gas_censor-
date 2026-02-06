@@ -36,7 +36,7 @@ The backend is built with **FastAPI**.
 1.  Open a terminal in the root folder.
 2.  Navigate to server:
     ```sh
-    cd server
+    cd server --------------------------------------------------------
     ```
 3.  (Optional but Recommended) Create a Virtual Environment:
     ```sh
@@ -45,7 +45,7 @@ The backend is built with **FastAPI**.
     ```
 4.  Install Dependencies:
     ```sh
-    pip install -r requirements.txt
+    pip install -r requirements.txt -------------------------------
     ```
 5.  **Configure Environment**:
     *   Open `server/.env`.
@@ -68,7 +68,7 @@ The frontend is built with **React + Vite**.
 1.  Open a **NEW** terminal.
 2.  Navigate to client:
     ```sh
-    cd client
+    cd client --------------------------------------------------------
     ```
 3.  Install Dependencies:
     ```sh
@@ -84,7 +84,7 @@ The frontend is built with **React + Vite**.
             ```
 5.  **Run the Client**:
     ```sh
-    npm run dev -- --host
+    npm run dev -- --host --------------------------------------------
     ```
     *Terminal will show: `Network: http://192.168.1.7:5173`*
 

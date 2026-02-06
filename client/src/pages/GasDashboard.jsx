@@ -7,6 +7,7 @@ import { clsx } from 'clsx';
 import { useAuth } from "../context/AuthContext";
 import IconPickerSidebar from "../components/IconPickerSidebar";
 import { motion } from "framer-motion";
+import GasSensorCard from "../components/GasSensorCard";
 
 const GasDashboard = ({ id, device }) => {
     const [readings, setReadings] = useState([]);
@@ -42,7 +43,23 @@ const GasDashboard = ({ id, device }) => {
 
     const copyToClipboard = () => {
         if (device?.device_token) {
-            navigator.clipboard.writeText(device.device_token);
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(device.device_token);
+            } else {
+                // Fallback for HTTP/LAN
+                const textArea = document.createElement("textarea");
+                textArea.value = device.device_token;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand("copy");
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -86,37 +103,7 @@ const GasDashboard = ({ id, device }) => {
         return DefaultIcon;
     };
 
-    const SensorCard = ({ title, value, unit, defaultIcon: DefaultIcon, colorClass, type, accentColor }) => {
-        const Icon = getSensorIcon(type, DefaultIcon);
 
-        // Dynamic border color based on accent
-        const borderColor = accentColor === 'emerald' ? 'group-hover:border-emerald-500/50' :
-            accentColor === 'orange' ? 'group-hover:border-orange-500/50' :
-                accentColor === 'blue' ? 'group-hover:border-blue-500/50' : 'group-hover:border-violet-500/50';
-
-        return (
-            <motion.div
-                variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-                onClick={() => handleSensorClick(type)}
-                className={clsx("neo-card p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 group relative border border-white/5", borderColor)}
-            >
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-1.5 bg-white/5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                        <Edit3 size={14} />
-                    </div>
-                </div>
-
-                <div className={clsx("p-4 rounded-2xl mb-4 transition-transform group-hover:scale-110 duration-300 shadow-lg", colorClass)}>
-                    <Icon size={32} />
-                </div>
-
-                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{title}</h3>
-                <div className="text-3xl font-bold text-white flex items-baseline gap-1">
-                    {value ?? "--"} <span className="text-lg text-slate-500 font-medium">{unit}</span>
-                </div>
-            </motion.div>
-        );
-    };
 
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
@@ -195,44 +182,44 @@ const GasDashboard = ({ id, device }) => {
             </motion.div>
 
             {/* Sensor Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <SensorCard
+            <motion.div variants={container} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <GasSensorCard
                     title="Gas Level"
                     value={latest?.gas ? Number(latest.gas).toFixed(0) : null}
                     unit="ppm"
-                    defaultIcon={Wind}
-                    type="Gas"
+                    Icon={getSensorIcon('Gas', Wind)}
+                    onClick={() => handleSensorClick('Gas')}
                     accentColor="violet"
                     colorClass="bg-violet-500/20 text-violet-400 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
                 />
-                <SensorCard
+                <GasSensorCard
                     title="Temperature"
                     value={latest?.temperature ? Number(latest.temperature).toFixed(1) : null}
                     unit="°C"
-                    defaultIcon={Thermometer}
-                    type="Temperature"
+                    Icon={getSensorIcon('Temperature', Thermometer)}
+                    onClick={() => handleSensorClick('Temperature')}
                     accentColor="orange"
                     colorClass="bg-orange-500/20 text-orange-400 shadow-[0_0_20px_rgba(251,146,60,0.15)]"
                 />
-                <SensorCard
+                <GasSensorCard
                     title="Humidity"
                     value={latest?.humidity ? Number(latest.humidity).toFixed(1) : null}
                     unit="%"
-                    defaultIcon={Droplets}
-                    type="Humidity"
+                    Icon={getSensorIcon('Humidity', Droplets)}
+                    onClick={() => handleSensorClick('Humidity')}
                     accentColor="blue"
                     colorClass="bg-blue-500/20 text-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.15)]"
                 />
-                <SensorCard
+                <GasSensorCard
                     title="Distance"
                     value={latest?.distance ? Number(latest.distance).toFixed(1) : null}
                     unit="cm"
-                    defaultIcon={Activity}
-                    type="Distance"
+                    Icon={getSensorIcon('Distance', Activity)}
+                    onClick={() => handleSensorClick('Distance')}
                     accentColor="emerald"
                     colorClass="bg-emerald-500/20 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
                 />
-            </div>
+            </motion.div>
 
             <IconPickerSidebar
                 isOpen={pickerOpen}

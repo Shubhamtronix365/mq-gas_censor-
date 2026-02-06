@@ -84,7 +84,23 @@ const LDRDashboard = ({ id, device }) => {
 
     const copyToClipboard = () => {
         if (device?.device_token) {
-            navigator.clipboard.writeText(device.device_token);
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(device.device_token);
+            } else {
+                // Fallback for HTTP/LAN
+                const textArea = document.createElement("textarea");
+                textArea.value = device.device_token;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand("copy");
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
