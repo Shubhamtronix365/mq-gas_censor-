@@ -41,7 +41,14 @@ class SensorData(Base):
     humidity = Column(Float, nullable=True)
     distance = Column(Float, nullable=True)
     
-
+    co2 = Column(Float, nullable=True)
+    oxygen = Column(Float, nullable=True)
+    voc = Column(Integer, nullable=True)
+    hcho = Column(Float, nullable=True)
+    pressure = Column(Float, nullable=True)
+    pm25 = Column(Float, nullable=True)
+    pm10 = Column(Float, nullable=True)
+    iaq = Column(Integer, nullable=True)
     
     # Status: SAFE, WARNING, DANGER
     status = Column(String)

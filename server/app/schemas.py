@@ -46,6 +46,18 @@ class SensorDataCreate(BaseModel):
     temperature: Optional[float] = None
     humidity: Optional[float] = None
     distance: Optional[float] = None
+    co2: Optional[float] = None
+    oxygen: Optional[float] = None
+    voc: Optional[int] = None
+    hcho: Optional[float] = None
+    pressure: Optional[float] = None
+    pm25: Optional[float] = Field(None, alias="pm2.5")
+    pm10: Optional[float] = None
+    iaq: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
 
 class SensorDataResponse(SensorDataCreate):
     id: int
@@ -53,6 +65,7 @@ class SensorDataResponse(SensorDataCreate):
     status: str
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 # Token Schemas
 class Token(BaseModel):
