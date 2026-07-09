@@ -55,7 +55,13 @@ SenseGrid solves the challenge of scattered environmental data and disconnected 
 - **Bento-Grid Correlation**: Renders overlapping Recharts area graphs displaying the correlation of air quality against light levels.
 - **Full Command Deck**: Combines all environment parameters and switches on a single unified screen.
 
-### 6. Hardware Firmware (ESP32)
+### 6. Air Quality Monitoring (AirQualityDashboard)
+
+- **Comprehensive Multi-Gas Tracking**: Displays 10 crucial environmental metrics including Air Quality Index (AQI/IAQ), Temperature, Humidity, CO₂, Oxygen (O₂), VOCs, Formaldehyde (HCHO), Barometric Pressure, PM2.5, and PM10.
+- **Advanced Bento Analytics**: Glowing, adaptively colored status indicators for quick hazard assessments.
+- **Interactive Time-Series Charting**: Real-time trend visualizers mapping gas correlation and particulate matter overlay.
+
+### 7. Hardware Firmware (ESP32)
 
 - **Offline Zero-Latency Loop**: Directly maps LDR values to PWM dimming for local LEDs, remaining operational even during network failures.
 - **Polled Command Execution**: Microcontroller queries the server every 1 second to fetch relay states and triggers standard GPIO outputs (`digitalWrite`).
@@ -100,6 +106,7 @@ project-root/
 │   └── myenv/                   # Local Python Virtual Environment (git-ignored)
 │
 ├── firmware/                    # Arduino ESP32 Source sketches
+│   ├── esp32_air_quality/       # Finalized Air Quality Monitoring firmware
 │   ├── esp32_combined/          # Unified firmware sketch (Combined Telemetry + Outputs)
 │   ├── esp32_ldr/               # Dedicated LDR sketch
 │   └── esp32_sensegrid/         # Dedicated Air Quality sketch
@@ -223,8 +230,8 @@ Create `.env` files matching the configuration variables below.
 ### Server Config (`server/.env`)
 
 ```ini
-DATABASE_URL=postgresql://postgres:Bhavesh729@localhost:5432/sensegrid
-SECRET_KEY=your_super_secret_jwt_passphrase_key
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/sensegrid
+SECRET_KEY=your_generated_jwt_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ```
