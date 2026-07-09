@@ -147,10 +147,11 @@ const Devices = () => {
                                     </div>
                                 </div>
 
-                                <div>
+                                 <div>
                                     <h3 className="text-xl font-bold text-white mb-1 tracking-tight">
                                         {device.device_type === 'ldr_sensor' ? 'LightNode' :
-                                            device.device_type === 'combined_sensor' ? 'FusionNode' : 'GasNode'}
+                                            device.device_type === 'combined_sensor' ? 'FusionNode' :
+                                            device.device_type === 'air_quality_monitor' ? 'AirQualityNode' : 'GasNode'}
                                     </h3>
                                     <p className="text-sm text-slate-400 font-mono tracking-wide opacity-60 mb-4">
                                         ID: {device.device_id}
@@ -158,7 +159,7 @@ const Devices = () => {
 
                                     <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                                         <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">
-                                            {device.device_type === 'combined_sensor' ? 'Multi-Sensor' : 'Single Point'}
+                                            {device.device_type === 'combined_sensor' || device.device_type === 'air_quality_monitor' ? 'Multi-Sensor' : 'Single Point'}
                                         </span>
                                         <Activity size={16} className="text-slate-600 group-hover:text-violet-400 transition-colors" />
                                     </div>
@@ -256,6 +257,7 @@ const Devices = () => {
                                             <option value="gas_sensor" className="bg-slate-800">Gas Sensor Node</option>
                                             <option value="ldr_sensor" className="bg-slate-800">LDR Sensor Node</option>
                                             <option value="combined_sensor" className="bg-slate-800">Fusion Node (Gas + LDR)</option>
+                                            <option value="air_quality_monitor" className="bg-slate-800">Air Quality Monitoring</option>
                                         </select>
                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                             <ChevronDown size={16} />
