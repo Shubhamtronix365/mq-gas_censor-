@@ -14,13 +14,14 @@ router = APIRouter(
 )
 
 # Fetch settings from environment or default to Sandbox credentials
-PAYU_MERCHANT_KEY = os.getenv("PAYU_MERCHANT_KEY", "gtKFFx")  # PayU Mock key
-PAYU_MERCHANT_SALT = os.getenv("PAYU_MERCHANT_SALT", "eCwWELSp") # PayU Mock salt
-PAYU_SANDBOX = os.getenv("PAYU_SANDBOX", "true").lower() == "true"
+PAYU_ENV = os.getenv("PAYU_ENV", "test").lower()
+PAYU_KEY = os.getenv("PAYU_KEY", "gtKFFx")
+PAYU_SALT = os.getenv("PAYU_SALT", "eCwWELSp")
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-PAYU_GATEWAY_URL = "https://test.payu.in/_payment" if PAYU_SANDBOX else "https://secure.payu.in/_payment"
+# Redirect URL based on the environment setting
+PAYU_GATEWAY_URL = "https://secure.payu.in/_payment" if PAYU_ENV == "production" else "https://test.payu.in/_payment"
 
 class PaymentInitiateRequest(BaseModel):
     plan_id: str
@@ -67,7 +68,7 @@ def initiate_payment(
     udf2 = currency
     udf3 = origin
     
-    hash_sequence = f"{PAYU_MERCHANT_KEY}|{txnid}|{amount}|{productinfo}|{firstname}|{email}|{udf1}|{udf2}|{udf3}||||||||{PAYU_MERCHANT_SALT}"
+    hash_sequence = f"{PAYU_KEY}|{txnid}|{amount}|{productinfo}|{firstname}|{email}|{udf1}|{udf2}|{udf3}||||||||{PAYU_SALT}"
     tx_hash = hashlib.sha512(hash_sequence.encode('utf-8')).hexdigest().lower()
     
     surl = f"{BACKEND_URL}/api/v1/payment/callback"
@@ -75,7 +76,7 @@ def initiate_payment(
     
     return {
         "payu_url": PAYU_GATEWAY_URL,
-        "key": PAYU_MERCHANT_KEY,
+        "key": PAYU_KEY,
         "txnid": txnid,
         "amount": amount,
         "productinfo": productinfo,
@@ -109,7 +110,7 @@ def payment_callback(
     # PayU Reverse Hash Formula (to verify authenticity):
     # sha512(SALT|status||||||||udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
     # udf3 is origin, udf2 is currency, udf1 is plan_id
-    reverse_hash_sequence = f"{PAYU_MERCHANT_SALT}|{status}||||||||{udf3}|{udf2}|{udf1}|{email}|{firstname}|{productinfo}|{amount}|{txnid}|{key}"
+    reverse_hash_sequence = f"{PAYU_SALT}|{status}||||||||{udf3}|{udf2}|{udf1}|{email}|{firstname}|{productinfo}|{amount}|{txnid}|{key}"
     computed_hash = hashlib.sha512(reverse_hash_sequence.encode('utf-8')).hexdigest().lower()
     
     if computed_hash != hash.lower():

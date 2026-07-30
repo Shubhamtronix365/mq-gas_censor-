@@ -16,13 +16,10 @@ const Profile = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState("profile"); // profile, billing, sessions
     const [currency, setCurrency] = useState(user?.subscription_currency || "INR"); // INR, USD
-    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState(null);
-    const [cardNumber, setCardNumber] = useState("");
-    const [cardExpiry, setCardExpiry] = useState("");
-    const [cardCvc, setCardCvc] = useState("");
-    const [cardName, setCardName] = useState("");
     const [isUpgrading, setIsUpgrading] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     // Parse payment callbacks on redirect landing
     useEffect(() => {
@@ -112,24 +109,15 @@ const Profile = () => {
         }
     };
 
-    const handleUpgradePlan = (planId) => {
-        setSelectedPlan(planId);
-        setCardNumber("");
-        setCardExpiry("");
-        setCardCvc("");
-        setCardName(profile.full_name);
-        setIsCheckoutOpen(true);
-    };
-
-    const submitUpgrade = async (e) => {
-        e.preventDefault();
+    const submitUpgrade = async (planId) => {
         setIsUpgrading(true);
+        setSelectedPlan(planId);
         setMessage(null);
 
         try {
             // Initiate PayU Payment Gateway session
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/payment/initiate`, {
-                plan_id: selectedPlan,
+                plan_id: planId,
                 currency: currency
             });
 
@@ -156,6 +144,30 @@ const Profile = () => {
             console.error("Failed to initiate PayU payment", error);
             setMessage({ type: "error", text: "Failed to connect to PayU Gateway. Please try again." });
             setIsUpgrading(false);
+        }
+    };
+
+    const submitCancellation = async () => {
+        setIsCancelling(true);
+        setMessage(null);
+
+        try {
+            const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/v1/users/me/subscription`, {
+                subscription_plan: "free",
+                subscription_status: "inactive",
+                subscription_currency: "INR",
+                subscription_expiry: null
+            });
+
+            updateUser(response.data);
+            setIsCancelModalOpen(false);
+            setMessage({ type: "success", text: "Subscription cancelled successfully. Account downgraded to Free plan." });
+            setTimeout(() => setMessage(null), 4000);
+        } catch (error) {
+            console.error("Failed to cancel subscription:", error);
+            setMessage({ type: "error", text: "Cancellation request failed. Please try again." });
+        } finally {
+            setIsCancelling(false);
         }
     };
 
@@ -514,6 +526,30 @@ const Profile = () => {
                             </div>
                         </div>
 
+                        {/* Active Subscription Summary Box */}
+                        {user?.subscription_plan && user.subscription_plan !== "free" && user.subscription_plan !== "none" && (
+                            <div className="neo-card p-6 border-violet-500/20 bg-gradient-to-r from-violet-950/15 via-[#0b132b]/80 to-[#020617] relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                <div className="absolute top-[-50%] right-[-50%] w-[100%] h-[200%] bg-gradient-to-l from-violet-500/5 to-transparent pointer-events-none" />
+                                <div className="space-y-2 relative z-10">
+                                    <span className="px-2.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-black uppercase rounded-full tracking-widest">
+                                        Subscribed Member
+                                    </span>
+                                    <h3 className="text-lg font-extrabold text-white uppercase tracking-tight mt-1">
+                                        Current Plan: {user.subscription_plan}
+                                    </h3>
+                                    <p className="text-xs text-slate-400">
+                                        Your subscription status is <span className="text-emerald-400 font-bold uppercase">{user.subscription_status}</span> using <span className="text-white font-bold">{user.subscription_currency}</span> currency.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsCancelModalOpen(true)}
+                                    className="px-6 py-2.5 border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 relative z-10 hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                                >
+                                    Cancel Subscription
+                                </button>
+                            </div>
+                        )}
+
                         {/* Pricing Cards Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {plans.map(plan => {
@@ -579,15 +615,23 @@ const Profile = () => {
                                                 </button>
                                             ) : (
                                                 <button 
-                                                    onClick={() => handleUpgradePlan(plan.id)}
+                                                    onClick={() => submitUpgrade(plan.id)}
+                                                    disabled={isUpgrading}
                                                     className={clsx(
-                                                        "w-full py-3 font-bold rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95",
+                                                        "w-full py-3 font-bold rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1.5",
                                                         plan.color === 'emerald' ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950" :
                                                         plan.color === 'violet' ? "bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/25" :
-                                                        "bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-md shadow-fuchsia-600/25"
+                                                        "bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-md shadow-fuchsia-600/25",
+                                                        isUpgrading && "opacity-75 cursor-not-allowed"
                                                     )}
                                                 >
-                                                    Upgrade Plan
+                                                    {isUpgrading && selectedPlan === plan.id ? (
+                                                        <>
+                                                            <Loader className="animate-spin" size={14} /> Redirecting...
+                                                        </>
+                                                    ) : (
+                                                        "Upgrade Plan"
+                                                    )}
                                                 </button>
                                             )}
                                         </div>
@@ -697,15 +741,18 @@ const Profile = () => {
             </AnimatePresence>
 
             {/* Simulated Subscription Payment Checkout Modal */}
+            {/* Checkout modal completely removed - redirects directly to PayU gateway */}
+
+            {/* Cancel Subscription Confirmation Modal */}
             <AnimatePresence>
-                {isCheckoutOpen && (
+                {isCancelModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 select-none">
                         {/* Blur Backdrop */}
                         <motion.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setIsCheckoutOpen(false)}
+                            onClick={() => setIsCancelModalOpen(false)}
                             className="absolute inset-0 bg-[#020617]/70 backdrop-blur-md"
                         />
 
@@ -716,98 +763,40 @@ const Profile = () => {
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             className="relative w-full max-w-md bg-[#0b132b]/95 border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden"
                         >
-                            {/* Decorative background lights */}
-                            <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-tr from-violet-600/10 via-transparent to-emerald-500/10 pointer-events-none" />
+                            {/* Decorative background light */}
+                            <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-tr from-red-600/5 via-transparent to-transparent pointer-events-none" />
 
-                            <div className="relative z-10">
-                                <div className="flex justify-between items-center pb-4 border-b border-white/5 mb-6">
-                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <CreditCard className="text-violet-400" /> Checkout Portal
-                                    </h3>
+                            <div className="relative z-10 text-center">
+                                <div className="w-16 h-16 mx-auto bg-red-500/15 border border-red-500/30 rounded-2xl flex items-center justify-center mb-4">
+                                    <AlertTriangle size={32} className="text-red-400" />
+                                </div>
+                                
+                                <h3 className="text-lg font-bold text-white mb-2">Cancel Subscription?</h3>
+                                <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                                    Are you sure you want to cancel your <strong className="text-white uppercase">{user?.subscription_plan}</strong> plan? Your telemetry metrics ingestion and custom analytics triggers will be instantly downgraded back to default Free limits.
+                                </p>
+
+                                <div className="flex gap-4">
                                     <button 
-                                        onClick={() => setIsCheckoutOpen(false)}
-                                        className="text-slate-400 hover:text-white transition-colors font-mono text-sm px-2 py-1 rounded-lg hover:bg-white/5"
+                                        onClick={() => setIsCancelModalOpen(false)}
+                                        className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors"
                                     >
-                                        Close
+                                        Keep My Plan
+                                    </button>
+                                    <button 
+                                        onClick={submitCancellation}
+                                        disabled={isCancelling}
+                                        className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/25 disabled:opacity-75 disabled:cursor-not-allowed"
+                                    >
+                                        {isCancelling ? (
+                                            <>
+                                                <Loader className="animate-spin" size={14} /> Processing...
+                                            </>
+                                        ) : (
+                                            "Yes, Cancel"
+                                        )}
                                     </button>
                                 </div>
-
-                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 mb-6">
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Subscribing to</p>
-                                    <div className="flex justify-between items-center mt-1">
-                                        <span className="text-md font-extrabold text-white uppercase">{selectedPlan} Plan</span>
-                                        <span className="text-xl font-extrabold text-emerald-400">{plans.find(p => p.id === selectedPlan)?.price[currency]}<span className="text-[10px] text-slate-400 font-medium">/mo</span></span>
-                                    </div>
-                                </div>
-
-                                <form onSubmit={submitUpgrade} className="space-y-4">
-                                    <div className="space-y-1">
-                                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Cardholder Name</label>
-                                        <input 
-                                            type="text" 
-                                            required
-                                            value={cardName} 
-                                            onChange={(e) => setCardName(e.target.value)}
-                                            className="neo-input py-2 text-sm"
-                                            placeholder="John Doe" 
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Card Number</label>
-                                        <input 
-                                            type="text" 
-                                            required
-                                            maxLength="19"
-                                            value={cardNumber} 
-                                            onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
-                                            className="neo-input py-2 text-sm font-mono"
-                                            placeholder="4000 1234 5678 9010" 
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                maxLength="5"
-                                                value={cardExpiry} 
-                                                onChange={(e) => setCardExpiry(e.target.value.replace(/\D/g, '').replace(/(.{2})/g, '$1/').replace(/\/$/, ''))}
-                                                className="neo-input py-2 text-sm font-mono"
-                                                placeholder="MM/YY" 
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">CVC Code</label>
-                                            <input 
-                                                type="password" 
-                                                required
-                                                maxLength="3"
-                                                value={cardCvc} 
-                                                onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, ''))}
-                                                className="neo-input py-2 text-sm font-mono"
-                                                placeholder="•••" 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4">
-                                        <button 
-                                            type="submit" 
-                                            disabled={isUpgrading}
-                                            className="w-full neo-btn-primary py-3 flex items-center justify-center gap-2 font-bold uppercase tracking-wider text-xs"
-                                        >
-                                            {isUpgrading ? <Loader className="animate-spin" size={16} /> : <CheckCircle size={16} />}
-                                            {isUpgrading ? "Processing payment..." : "Confirm & Subscribe"}
-                                        </button>
-                                    </div>
-                                    
-                                    <p className="text-[9px] text-slate-500 text-center leading-relaxed">
-                                        Demo SaaS Subscription checkout. Secure sandbox processing active.
-                                    </p>
-                                </form>
                             </div>
                         </motion.div>
                     </div>
