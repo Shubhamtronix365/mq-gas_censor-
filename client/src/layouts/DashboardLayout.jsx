@@ -162,21 +162,6 @@ const DashboardLayout = () => {
                             <NavItem to="/subscription" icon={CreditCard} label="Subscription" />
                             <NavItem to="/profile" icon={User} label="Profile" />
                         </nav>
-
-                        <div className="p-6 border-t border-white/5">
-                            <div className="p-4 rounded-xl bg-gradient-to-br from-violet-600/20 to-blue-600/20 border border-white/5 mb-4">
-                                <h4 className="text-sm font-bold text-white mb-1 uppercase">{user?.subscription_plan || "Free Plan"}</h4>
-                                <p className="text-xs text-slate-400 mb-3">
-                                    {user?.subscription_status === 'active' ? "Your subscription is active." : "Upgrade to unlock metrics limits."}
-                                </p>
-                                <div className="h-1.5 w-full bg-slate-700/50 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-violet-500 rounded-full transition-all"
-                                        style={{ width: user?.subscription_plan && user.subscription_plan !== "free" ? "100%" : "30%" }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
                     </motion.aside>
                 )}
             </AnimatePresence>

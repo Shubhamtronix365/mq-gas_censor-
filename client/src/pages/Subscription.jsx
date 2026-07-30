@@ -255,20 +255,30 @@ const Subscription = () => {
                 {plans.map(plan => {
                     const PlanIcon = plan.icon;
                     const isActive = user?.subscription_plan === plan.id;
+                    const isPopular = plan.id === "professional"; // Highlight Pro plan
                     
                     return (
-                        <div 
+                        <motion.div 
                             key={plan.id}
+                            whileHover={{ y: -8, transition: { duration: 0.2, ease: "easeOut" } }}
                             className={clsx(
-                                "neo-card p-6 flex flex-col justify-between transition-all duration-300 relative",
+                                "neo-card p-6 flex flex-col justify-between transition-all duration-300 relative overflow-hidden",
                                 isActive 
                                     ? "border-emerald-500 bg-gradient-to-b from-[#10b981]/5 to-[#0b1424] shadow-[0_0_30px_rgba(16,185,129,0.08)] scale-[1.02]" 
+                                    : isPopular
+                                    ? "border-violet-500/30 bg-gradient-to-b from-violet-600/5 to-[#090f1d] shadow-[0_0_40px_rgba(139,92,246,0.1)]"
                                     : "border-white/5 hover:border-white/10 hover:shadow-xl"
                             )}
                         >
                             {isActive && (
-                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 text-slate-950 text-[9px] font-black uppercase rounded-full tracking-widest shadow-md">
+                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 text-slate-950 text-[9px] font-black uppercase rounded-full tracking-widest shadow-md z-10">
                                     Active subscription
+                                </span>
+                            )}
+
+                            {isPopular && !isActive && (
+                                <span className="absolute top-0 right-0 px-3.5 py-1 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[9px] font-black uppercase rounded-bl-xl tracking-widest shadow-md z-10">
+                                    Most Popular
                                 </span>
                             )}
 
@@ -334,9 +344,45 @@ const Subscription = () => {
                                     </button>
                                 )}
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 })}
+            </div>
+
+            {/* B2B FAQs Accordion Grid */}
+            <div className="neo-card p-6 md:p-8 border-white/5 space-y-6">
+                <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Globe className="text-violet-400" size={22} /> Frequently Asked Questions
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1">Everything you need to know about our IoT platform subscriptions, PayU security, and billing guidelines.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                    {[
+                        {
+                            q: "How does the PayU payment gateway integration work?",
+                            a: "When you click 'Upgrade Plan', our server generates a secure transaction token and hashes it using SHA-512 with a salt key hidden on the backend. This guarantees that your checkout info is tampered-proof. You are redirected to PayU to pay using UPI, card, or net banking, and redirected back automatically."
+                        },
+                        {
+                            q: "What happens if I cancel my subscription?",
+                            a: "Your account will downgrade back to the Free plan. All metrics data collected during the subscription remains safe, but device configurations exceeding the free quota (max 2 active microcontrollers) will be paused, and polling frequency will be normalized."
+                        },
+                        {
+                            q: "Can I switch billing currencies after subscribing?",
+                            a: "Billing currency is mapped on checkout. If you need to switch between INR (₹) and USD ($), you can downgrade and resubscribe using the alternative currency toggle at the top of the billing dashboard."
+                        },
+                        {
+                            q: "Is there a long-term contract requirement?",
+                            a: "No, all plans are billed on a month-to-month basis. You can cancel, upgrade, or downgrade your active SaaS control center subscription at any time directly through this portal."
+                        }
+                    ].map((faq, index) => (
+                        <div key={index} className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2 hover:bg-white/10 transition-colors">
+                            <h4 className="text-sm font-bold text-white">{faq.q}</h4>
+                            <p className="text-xs text-slate-400 leading-relaxed">{faq.a}</p>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Cancel Subscription Confirmation Modal */}
