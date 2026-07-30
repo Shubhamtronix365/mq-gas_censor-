@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
 import DeviceDetail from "./pages/DeviceDetail";
 import Profile from "./pages/Profile";
+import Subscription from "./pages/Subscription";
 import { Agentation } from "agentation";
 
 const ProtectedRoute = ({ children }) => {
@@ -32,6 +33,7 @@ const AppRoutes = () => {
         <Route path="/devices" element={<Devices />} />
         <Route path="/devices/:id" element={<DeviceDetail />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/subscription" element={<Subscription />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

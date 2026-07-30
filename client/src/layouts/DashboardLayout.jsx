@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, LayoutDashboard, Server, User, Menu, X, Zap, ChevronDown, Bell, Settings } from "lucide-react";
+import { LogOut, LayoutDashboard, Server, User, Menu, X, Zap, ChevronDown, Bell, Settings, CreditCard } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import LayoutWrapper from "./LayoutWrapper";
@@ -86,6 +86,10 @@ const DashboardLayout = () => {
                                 Profile Settings
                             </button>
                             <button
+                                onClick={() => {
+                                    navigate("/subscription");
+                                    setIsOpen(false);
+                                }}
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-sm"
                             >
                                 <Zap size={16} />
@@ -155,15 +159,21 @@ const DashboardLayout = () => {
                         <nav className="flex-1 px-6 space-y-2 mt-8 md:mt-0">
                             <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
                             <NavItem to="/devices" icon={Server} label="Devices" />
+                            <NavItem to="/subscription" icon={CreditCard} label="Subscription" />
                             <NavItem to="/profile" icon={User} label="Profile" />
                         </nav>
 
                         <div className="p-6 border-t border-white/5">
                             <div className="p-4 rounded-xl bg-gradient-to-br from-violet-600/20 to-blue-600/20 border border-white/5 mb-4">
-                                <h4 className="text-sm font-bold text-white mb-1">Pro Plan</h4>
-                                <p className="text-xs text-slate-400 mb-3">Your subscription is active.</p>
+                                <h4 className="text-sm font-bold text-white mb-1 uppercase">{user?.subscription_plan || "Free Plan"}</h4>
+                                <p className="text-xs text-slate-400 mb-3">
+                                    {user?.subscription_status === 'active' ? "Your subscription is active." : "Upgrade to unlock metrics limits."}
+                                </p>
                                 <div className="h-1.5 w-full bg-slate-700/50 rounded-full overflow-hidden">
-                                    <div className="h-full w-[70%] bg-violet-500 rounded-full"></div>
+                                    <div 
+                                        className="h-full bg-violet-500 rounded-full transition-all"
+                                        style={{ width: user?.subscription_plan && user.subscription_plan !== "free" ? "100%" : "30%" }}
+                                    ></div>
                                 </div>
                             </div>
                         </div>
