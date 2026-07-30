@@ -49,6 +49,7 @@ class SensorData(Base):
     pm25 = Column(Float, nullable=True)
     pm10 = Column(Float, nullable=True)
     iaq = Column(Integer, nullable=True)
+    kwh = Column(Float, nullable=True)
     
     # Status: SAFE, WARNING, DANGER
     status = Column(String)

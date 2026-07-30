@@ -65,6 +65,7 @@ def ingest_data(
         pm25=data.pm25,
         pm10=data.pm10,
         iaq=data.iaq,
+        kwh=data.kwh,
         status=status_val
     )
     

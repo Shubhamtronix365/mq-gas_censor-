@@ -35,7 +35,8 @@ def migrate():
             ("pressure", "DOUBLE PRECISION"),
             ("pm25", "DOUBLE PRECISION"),
             ("pm10", "DOUBLE PRECISION"),
-            ("iaq", "INTEGER")
+            ("iaq", "INTEGER"),
+            ("kwh", "DOUBLE PRECISION")
         ]
 
         for col_name, col_type in columns_to_add:

@@ -54,6 +54,7 @@ class SensorDataCreate(BaseModel):
     pm25: Optional[float] = Field(None, alias="pm2.5")
     pm10: Optional[float] = None
     iaq: Optional[int] = None
+    kwh: Optional[float] = None
 
     class Config:
         from_attributes = True

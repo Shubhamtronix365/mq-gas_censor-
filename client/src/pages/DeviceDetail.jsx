@@ -5,6 +5,7 @@ import GasDashboard from "./GasDashboard";
 import LDRDashboard from "./LDRDashboard";
 import UnifiedDashboard from "./UnifiedDashboard";
 import AirQualityDashboard from "./AirQualityDashboard";
+import EnergyMeterDashboard from "./EnergyMeterDashboard";
 
 const DeviceDetail = () => {
     const { id } = useParams();
@@ -43,6 +44,10 @@ const DeviceDetail = () => {
 
     if (device.device_type === 'air_quality_monitor') {
         return <AirQualityDashboard id={id} device={device} />;
+    }
+
+    if (device.device_type === 'energy_meter') {
+        return <EnergyMeterDashboard id={id} device={device} />;
     }
 
     // Default to Gas Sensor if type is missing or matches

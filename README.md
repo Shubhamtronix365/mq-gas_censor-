@@ -61,7 +61,13 @@ SenseGrid solves the challenge of scattered environmental data and disconnected 
 - **Advanced Bento Analytics**: Glowing, adaptively colored status indicators for quick hazard assessments.
 - **Interactive Time-Series Charting**: Real-time trend visualizers mapping gas correlation and particulate matter overlay.
 
-### 7. Hardware Firmware (ESP32)
+### 7. Energy Monitoring (EnergyMeterDashboard)
+
+- **High-Precision Telemetry**: Ingests and graphs cumulative energy consumption (kWh) over time.
+- **Schneider EasyLogic EM1X00 Replica**: Features an interactive, retro LCD physical simulator based on the Schneider Electric EasyLogic meter. Clicking simulator buttons (ESC, ▲, ▼, OK) shifts the console to read live cumulative energy (kWh), active power demand (kW), line-to-neutral voltages (V), or phase currents (A).
+- **Sequence Phase Indicators**: Glowing LED phase widgets (L1, L2, L3) that animate sequence cycles to represent real-time three-phase voltage lines.
+
+### 8. Hardware Firmware (ESP32)
 
 - **Offline Zero-Latency Loop**: Directly maps LDR values to PWM dimming for local LEDs, remaining operational even during network failures.
 - **Polled Command Execution**: Microcontroller queries the server every 1 second to fetch relay states and triggers standard GPIO outputs (`digitalWrite`).
@@ -109,7 +115,8 @@ project-root/
 │   ├── esp32_air_quality/       # Finalized Air Quality Monitoring firmware
 │   ├── esp32_combined/          # Unified firmware sketch (Combined Telemetry + Outputs)
 │   ├── esp32_ldr/               # Dedicated LDR sketch
-│   └── esp32_sensegrid/         # Dedicated Air Quality sketch
+│   ├── esp32_sensegrid_gas/     # Dedicated Gas Sensor sketch
+│   └── esp32_energy_meter/      # Dedicated Energy Meter sketch (Modbus RTU / Simulation)
 │
 ├── .gitignore                   # Ignore node_modules, myenv, and credentials
 └── README.md                    # Core project documentation
