@@ -2,7 +2,7 @@ import os
 import hashlib
 import random
 import time
-from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from .. import database, models, schemas, auth
@@ -91,9 +91,11 @@ def initiate_payment(
         "udf3": udf3
     }
 
+
 @router.post("/callback")
 def payment_callback(
     request: Request,
+    background_tasks: BackgroundTasks,
     status: str = Form(...),
     txnid: str = Form(...),
     amount: str = Form(...),
@@ -116,8 +118,8 @@ def payment_callback(
     if computed_hash != hash.lower():
         print(f"FRAUD ALERT: Hash mismatch detected on callback for txn: {txnid}")
         return RedirectResponse(
-            url=f"{udf3}/profile?payment=error&reason=hash_mismatch",
-            status_code=status.HTTP_303_SEE_OTHER
+            url=f"{udf3}/payment/failure?txnid={txnid}&reason=hash_mismatch",
+            status_code=303
         )
         
     if status.lower() == "success":
@@ -130,13 +132,25 @@ def payment_callback(
             db.commit()
             print(f"Transaction success: Upgraded user {email} to {udf1}")
             
+            # Send Brevo HTML Email notification in background
+            from ..utils import email as email_utils
+            background_tasks.add_task(
+                email_utils.send_subscription_success_email,
+                user_email=email,
+                full_name=user.full_name or "IoT Administrator",
+                plan_name=udf1,
+                amount=amount,
+                currency=udf2.upper(),
+                txnid=txnid
+            )
+            
         return RedirectResponse(
-            url=f"{udf3}/profile?payment=success&plan={udf1}&txnid={txnid}",
-            status_code=status.HTTP_303_SEE_OTHER
+            url=f"{udf3}/payment/success?plan={udf1}&txnid={txnid}&amount={amount}&currency={udf2}",
+            status_code=303
         )
     else:
         print(f"Transaction failed for {email} on callback. Status: {status}")
         return RedirectResponse(
-            url=f"{udf3}/profile?payment=failure&txnid={txnid}",
-            status_code=status.HTTP_303_SEE_OTHER
+            url=f"{udf3}/payment/failure?txnid={txnid}&plan={udf1}&amount={amount}&currency={udf2}",
+            status_code=303
         )

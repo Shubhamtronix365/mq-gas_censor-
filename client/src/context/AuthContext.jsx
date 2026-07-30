@@ -82,12 +82,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const reloadUser = async () => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/users/me`);
+            setUser(response.data);
+        } catch (error) {
+            console.error("Failed to reload user profile", error);
+        }
+    };
+
     const logout = () => {
         setToken(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, googleLogin, register, logout, loading, token, updateUser }}>
+        <AuthContext.Provider value={{ user, login, googleLogin, register, logout, loading, token, updateUser, reloadUser }}>
             {!loading && children}
         </AuthContext.Provider>
     );

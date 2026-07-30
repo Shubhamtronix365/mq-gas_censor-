@@ -10,3 +10,4 @@ python-multipart
 requests
 python-dotenv
 httpx
+apscheduler

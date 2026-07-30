@@ -1,5 +1,5 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 import httpx
@@ -11,7 +11,11 @@ router = APIRouter(
 )
 
 @router.post("/register", response_model=schemas.UserResponse)
-def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+def register(
+    user: schemas.UserCreate, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(database.get_db)
+):
     try:
         print(f"Attempting to register user: {user.email}")
         db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -27,6 +31,17 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
         db.commit()
         db.refresh(new_user)
         print("User registered successfully.")
+        
+        # Send Welcome Notification email using background task
+        from ..utils import email as email_utils
+        background_tasks.add_task(
+            email_utils.send_general_notification_email,
+            user_email=new_user.email,
+            subject="🚀 Welcome to Tronix365 SenseGrid!",
+            title="IoT Control Center Initialized",
+            description=f"Welcome {new_user.full_name or 'Administrator'}! Your SenseGrid workspace node has been successfully provisioned. You can now add IoT devices and start streaming real-time sensor parameters."
+        )
+        
         return new_user
     except ValueError as ve:
         print(f"Validation error registering user: {ve}")

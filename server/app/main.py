@@ -6,13 +6,62 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from .database import engine, Base
-from .routers import auth, devices, data, users, ldr, payment
+from apscheduler.schedulers.background import BackgroundScheduler
+from .database import engine, Base, SessionLocal
+from .routers import auth, devices, data, users, ldr, payment, jobs
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TRONIX365 Indianiiot")
+
+def run_daily_expiry_check():
+    """Background cron job that checks for expiring subscriptions daily."""
+    from .utils import email as email_utils
+    from . import models
+    from datetime import datetime, timezone
+    
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        users_list = db.query(models.User).filter(
+            models.User.subscription_plan != "free",
+            models.User.subscription_plan != "none",
+            models.User.subscription_expiry.isnot(None)
+        ).all()
+        
+        for user in users_list:
+            expiry = user.subscription_expiry
+            if expiry.tzinfo is None:
+                expiry = expiry.replace(tzinfo=timezone.utc)
+            days_left = (expiry - now).days
+            
+            if days_left == 7:
+                expiry_str = expiry.strftime("%Y-%m-%d")
+                email_utils.send_subscription_expiry_warning_email(
+                    user_email=user.email,
+                    full_name=user.full_name or "IoT Administrator",
+                    plan_name=user.subscription_plan,
+                    expiry_date_str=expiry_str,
+                    days_left=7
+                )
+                print(f"EXPIRY ALERT: Sent 7-day warning to {user.email}")
+    finally:
+        db.close()
+
+# APScheduler for daily background cron jobs
+scheduler = BackgroundScheduler()
+scheduler.add_job(run_daily_expiry_check, "cron", hour=0, minute=0)
+
+@app.on_event("startup")
+def startup_event():
+    scheduler.start()
+    print("APScheduler started — daily subscription expiry checker running at midnight UTC.")
+
+@app.on_event("shutdown")
+def shutdown_event():
+    scheduler.shutdown()
+    print("APScheduler shut down cleanly.")
 
 # Sliding Window In-Memory Rate Limiter Middleware
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -78,6 +127,7 @@ app.include_router(devices.router)
 app.include_router(data.router)
 app.include_router(ldr.router)
 app.include_router(payment.router)
+app.include_router(jobs.router)
 
 @app.get("/")
 def read_root():

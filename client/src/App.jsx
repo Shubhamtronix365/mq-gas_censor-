@@ -8,6 +8,8 @@ import Devices from "./pages/Devices";
 import DeviceDetail from "./pages/DeviceDetail";
 import Profile from "./pages/Profile";
 import Subscription from "./pages/Subscription";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
 import { Agentation } from "agentation";
 
 const ProtectedRoute = ({ children }) => {
@@ -34,6 +36,8 @@ const AppRoutes = () => {
         <Route path="/devices/:id" element={<DeviceDetail />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/subscription" element={<Subscription />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/failure" element={<PaymentFailure />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
