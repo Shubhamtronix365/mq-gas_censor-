@@ -15,6 +15,7 @@ const EnergyMeterDashboard = ({ id, device }) => {
     const [displayMode, setDisplayMode] = useState(0); // 0: kWh, 1: kW (Load), 2: Volts, 3: Amps
     const [activePhase, setActivePhase] = useState(0);
     const [buttonPressed, setButtonPressed] = useState(null);
+    const [backlight, setBacklight] = useState(true);
 
     useEffect(() => {
         fetchReadings();
@@ -93,8 +94,8 @@ const EnergyMeterDashboard = ({ id, device }) => {
         } else if (btn === 'ESC') {
             setDisplayMode(0); // Return to default kWh
         } else if (btn === 'OK') {
-            // Flash display mode briefly or accept settings
-            alert(`EasyLogic EM1X00: Menu mode ${displayMode} Selected`);
+            // Toggle screen backlight standby mode
+            setBacklight((prev) => !prev);
         }
     };
 
@@ -226,7 +227,7 @@ const EnergyMeterDashboard = ({ id, device }) => {
                             
                             {/* EN 19N Label */}
                             <div className="absolute top-2 left-4 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-                                EasyLogic™
+                                Tronix365™
                             </div>
 
                             {/* Phase LEDs & Brackets */}
@@ -249,31 +250,48 @@ const EnergyMeterDashboard = ({ id, device }) => {
                             </div>
 
                             {/* Digital LCD screen with internal shadow and glass shine */}
-                            <div className="w-full h-24 bg-gradient-to-br from-[#8fa597] to-[#7f9486] rounded-md border-2 border-slate-950/70 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] p-3 flex flex-col justify-between relative overflow-hidden">
+                            <div className={clsx(
+                                "w-full h-24 rounded-md border-2 border-slate-950/70 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] p-3 flex flex-col justify-between relative overflow-hidden transition-all duration-500",
+                                backlight 
+                                    ? "bg-gradient-to-br from-[#8fa597] to-[#7f9486]" 
+                                    : "bg-[#101915]"
+                            )}>
                                 
                                 {/* LCD Screen Gloss Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none"></div>
 
                                 {/* Top Display title (Shows active measurement mode) */}
-                                <div className="flex justify-between items-center text-[9px] font-bold text-slate-800/80 font-mono uppercase tracking-wider">
+                                <div className={clsx(
+                                    "flex justify-between items-center text-[9px] font-mono uppercase tracking-wider transition-colors duration-500",
+                                    backlight ? "text-slate-800/80 font-bold" : "text-[#1a2e24]"
+                                )}>
                                     <span>{display.title}</span>
-                                    <span>NOMINAL</span>
+                                    <span>{backlight ? "NOMINAL" : "STNDBY"}</span>
                                 </div>
 
                                 {/* Main Value Text (Retro digital monospace look) */}
-                                <div className="text-2xl font-bold font-mono tracking-widest text-[#0e1f18] text-right font-extrabold pr-1 select-all select-none">
+                                <div className={clsx(
+                                    "text-2xl font-bold font-mono tracking-widest text-right font-extrabold pr-1 select-none transition-colors duration-500",
+                                    backlight ? "text-[#0e1f18]" : "text-[#16271e]"
+                                )}>
                                     {display.value}
                                 </div>
 
                                 {/* Bottom labels */}
                                 <div className="flex justify-between items-end">
                                     {/* Display Mode Indicator */}
-                                    <span className="text-[8px] font-bold text-slate-800/60 font-mono">
+                                    <span className={clsx(
+                                        "text-[8px] font-mono transition-colors duration-500",
+                                        backlight ? "text-slate-800/60 font-bold" : "text-[#1a2e24]"
+                                    )}>
                                         M0{displayMode}
                                     </span>
                                     
                                     {/* Units */}
-                                    <span className="text-xs font-bold text-[#0e1f18] tracking-widest lowercase">
+                                    <span className={clsx(
+                                        "text-xs font-mono tracking-widest lowercase transition-colors duration-500",
+                                        backlight ? "text-[#0e1f18] font-bold" : "text-[#16271e]"
+                                    )}>
                                         {display.label}
                                     </span>
                                 </div>
@@ -302,14 +320,14 @@ const EnergyMeterDashboard = ({ id, device }) => {
                                 ))}
                             </div>
 
-                            {/* Schneider Electric Logo and Model */}
+                            {/* Tronix365 Logo and Model */}
                             <div className="w-full flex justify-between items-center border-t border-zinc-700/60 pt-2.5 px-1">
                                 <div className="flex flex-col items-start leading-none">
                                     <span className="text-[10px] font-black text-white uppercase tracking-tight">
-                                        Schneider
+                                        TRONIX
                                     </span>
-                                    <span className="text-[9px] font-bold text-[#34c749] tracking-wide mt-[-2px]">
-                                        Electric
+                                    <span className="text-[9px] font-bold text-[#10b981] tracking-wide mt-[-2px]">
+                                        365
                                     </span>
                                 </div>
                                 <div className="text-[8px] text-zinc-400 font-medium">
@@ -330,8 +348,8 @@ const EnergyMeterDashboard = ({ id, device }) => {
                                 <Zap size={20} />
                             </div>
                             <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Cumulative Energy</h4>
-                            <div className="text-3xl font-extrabold text-white mt-1.5 flex items-baseline gap-1.5">
-                                {latest?.kwh ? Number(latest.kwh).toFixed(3) : "104859.712"}{" "}
+                            <div className="text-3xl font-extrabold font-mono text-white mt-1.5 flex items-baseline gap-1.5">
+                                {formatSchneiderKWh(latest?.kwh ?? 104859.712)}{" "}
                                 <span className="text-base text-slate-500 font-medium uppercase">kWh</span>
                             </div>
                         </div>
@@ -342,7 +360,7 @@ const EnergyMeterDashboard = ({ id, device }) => {
                                 <Cpu size={20} />
                             </div>
                             <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Estimated Load Rate</h4>
-                            <div className="text-3xl font-extrabold text-white mt-1.5 flex items-baseline gap-1.5">
+                            <div className="text-3xl font-extrabold font-mono text-white mt-1.5 flex items-baseline gap-1.5">
                                 {latest?.gas ? (latest.gas / 20.0).toFixed(2) : "18.45"}{" "}
                                 <span className="text-base text-slate-500 font-medium">kW</span>
                             </div>

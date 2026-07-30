@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
 import DeviceDetail from "./pages/DeviceDetail";
 import Profile from "./pages/Profile";
+import { Agentation } from "agentation";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ function App() {
     <Router>
       <AuthProvider>
         <AppRoutes />
+        {import.meta.env.DEV && <Agentation />}
       </AuthProvider>
     </Router>
   );

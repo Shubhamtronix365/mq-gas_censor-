@@ -204,6 +204,27 @@ npm run dev -- --host
 
 - Vite Dashboard will launch at: `http://localhost:5173`
 
+#### Running with Agentation MCP Server
+
+For visual UI feedback and direct syncing with AI coding agents:
+
+1. **Configure the MCP server** in your AI agent:
+   ```sh
+   npx add-mcp "npx -y agentation-mcp server"
+   ```
+   Or if using Claude Code:
+   ```sh
+   npx agentation-mcp init
+   ```
+2. **Start the Frontend development server** (runs with Agentation enabled in development mode):
+   ```sh
+   npm run dev
+   ```
+3. **Verify the server connection**:
+   ```sh
+   npx agentation-mcp doctor
+   ```
+
 ---
 
 ## 📦 Installed Libraries
@@ -227,6 +248,7 @@ npm run dev -- --host
 - `framer-motion` -> Micro-animations and page transitions.
 - `lucide-react` -> Icon sets for components.
 - `tailwindcss` -> Bento styling.
+- `agentation` -> Visual UI feedback toolbar for AI coding agents (Dev Dependency).
 
 ---
 
