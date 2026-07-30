@@ -23,6 +23,12 @@ const Register = () => {
             return;
         }
 
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            setError("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one digit.");
+            return;
+        }
+
         setIsLoading(true);
         try {
             const result = await register(email, password);

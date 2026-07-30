@@ -35,3 +35,18 @@ def update_user_me(user_update: schemas.UserUpdate, current_user: models.User = 
     db.commit()
     db.refresh(user)
     return user
+
+@router.put("/me/subscription", response_model=schemas.UserResponse)
+def update_user_subscription(
+    sub_update: schemas.SubscriptionUpdate,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    user.subscription_plan = sub_update.subscription_plan
+    user.subscription_status = sub_update.subscription_status
+    user.subscription_currency = sub_update.subscription_currency
+    user.subscription_expiry = sub_update.subscription_expiry
+    db.commit()
+    db.refresh(user)
+    return user

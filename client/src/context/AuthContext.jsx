@@ -57,6 +57,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const googleLogin = async (credential) => {
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/google`, {
+                credential
+            });
+            setToken(response.data.access_token);
+            return { success: true };
+        } catch (error) {
+            console.error("Google login failed", error);
+            return { success: false, error: error.response?.data?.detail || "Google login failed" };
+        }
+    };
+
     const register = async (email, password) => {
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
@@ -74,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, token, updateUser }}>
+        <AuthContext.Provider value={{ user, login, googleLogin, register, logout, loading, token, updateUser }}>
             {!loading && children}
         </AuthContext.Provider>
     );

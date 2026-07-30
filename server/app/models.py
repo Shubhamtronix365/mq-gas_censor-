@@ -11,7 +11,12 @@ class User(Base):
     full_name = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
     preferences = Column(JSON, default={})
-    hashed_password = Column(String)
+    hashed_password = Column(String, nullable=True)
+    subscription_plan = Column(String, default="starter") # starter, professional, enterprise
+    subscription_status = Column(String, default="active") # active, expired, trial
+    subscription_currency = Column(String, default="INR") # INR, USD
+    subscription_expiry = Column(DateTime, nullable=True)
+    google_id = Column(String, nullable=True, index=True)
     
     devices = relationship("Device", back_populates="owner")
 

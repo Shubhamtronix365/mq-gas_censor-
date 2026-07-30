@@ -2,6 +2,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
+import httpx
 from .. import database, models, schemas, auth
 
 router = APIRouter(
@@ -50,3 +51,63 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/google", response_model=schemas.Token)
+async def google_login(payload: schemas.GoogleLoginRequest, db: Session = Depends(database.get_db)):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={payload.credential}",
+                timeout=10.0
+            )
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Google credential token"
+            )
+            
+        token_info = response.json()
+        email = token_info.get("email")
+        google_id = token_info.get("sub")
+        name = token_info.get("name")
+        
+        if not email or not google_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Google payload data"
+            )
+            
+        user = db.query(models.User).filter(models.User.google_id == google_id).first()
+        
+        if not user:
+            user = db.query(models.User).filter(models.User.email == email).first()
+            if user:
+                user.google_id = google_id
+                if not user.full_name and name:
+                    user.full_name = name
+                db.commit()
+            else:
+                user = models.User(
+                    email=email,
+                    google_id=google_id,
+                    full_name=name,
+                    hashed_password=None
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+                
+        access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = auth.create_access_token(
+            data={"sub": user.email}, expires_delta=access_token_expires
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Google login error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Google login failed: {str(e)}"
+        )

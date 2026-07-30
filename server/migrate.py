@@ -46,6 +46,22 @@ def migrate():
                 print(f"Successfully added '{col_name}'.")
             except Exception as e:
                 print(f"Error adding '{col_name}': {e}")
+        # New subscription and google columns in users table
+        user_cols = [
+            ("subscription_plan", "VARCHAR DEFAULT 'starter'"),
+            ("subscription_status", "VARCHAR DEFAULT 'active'"),
+            ("subscription_currency", "VARCHAR DEFAULT 'INR'"),
+            ("subscription_expiry", "TIMESTAMP"),
+            ("google_id", "VARCHAR")
+        ]
+
+        for col_name, col_type in user_cols:
+            print(f"Adding '{col_name}' column to users table...")
+            try:
+                connection.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+                print(f"Successfully added '{col_name}'.")
+            except Exception as e:
+                print(f"Column '{col_name}' might already exist or error: {e}")
             
         connection.commit()
     print("Migration complete.")

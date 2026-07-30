@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import LayoutWrapper from "../layouts/LayoutWrapper";
@@ -10,8 +10,50 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, googleLogin } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const initGoogle = () => {
+            if (window.google) {
+                const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "68725838549-mockupclientid.apps.googleusercontent.com";
+                window.google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: handleGoogleResponse,
+                });
+                window.google.accounts.id.renderButton(
+                    document.getElementById("google-signin-btn"),
+                    { theme: "dark", size: "large", width: 320, text: "continue_with" }
+                );
+            }
+        };
+
+        const interval = setInterval(() => {
+            if (window.google) {
+                initGoogle();
+                clearInterval(interval);
+            }
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleGoogleResponse = async (response) => {
+        setIsLoading(true);
+        setError("");
+        try {
+            const result = await googleLogin(response.credential);
+            if (result.success) {
+                navigate("/");
+            } else {
+                setError(result.error || "Google sign-in failed.");
+            }
+        } catch (err) {
+            setError("Google sign-in error occurred.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -121,7 +163,17 @@ const Login = () => {
                         </div>
                     </form>
 
-                    <div className="mt-8 text-center text-sm relative z-10">
+                    <div className="relative my-6 z-10 flex items-center justify-center">
+                        <div className="border-t border-white/10 w-full"></div>
+                        <span className="bg-[#020617] px-3 text-slate-500 text-xs font-bold uppercase tracking-wider shrink-0">Or</span>
+                        <div className="border-t border-white/10 w-full"></div>
+                    </div>
+
+                    <div className="relative z-10 flex justify-center">
+                        <div id="google-signin-btn" className="w-full"></div>
+                    </div>
+
+                    <div className="mt-6 text-center text-sm relative z-10">
                         <p className="text-slate-500">
                             Don't have an account?{' '}
                             <Link to="/register" className="text-violet-400 font-bold hover:text-violet-300 transition-colors hover:underline decoration-violet-500/30 underline-offset-4">
