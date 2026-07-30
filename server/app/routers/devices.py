@@ -9,9 +9,36 @@ router = APIRouter(
     tags=["devices"]
 )
 
+# ── Subscription plan → maximum allowed devices ────────────────────────────
+# "free" and any unrecognized plan both get the Free tier limit
+PLAN_DEVICE_LIMITS = {
+    "free":         2,
+    "starter":      5,
+    "professional": 15,
+    "enterprise":   100,   # effectively unlimited for most use-cases
+}
+
+def get_device_limit(plan: str) -> int:
+    """Return the max nodes allowed for a given subscription plan name."""
+    return PLAN_DEVICE_LIMITS.get((plan or "free").lower(), 2)
+
 @router.get("/", response_model=List[schemas.DeviceResponse])
 def get_my_devices(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     return current_user.devices
+
+@router.get("/limit-info")
+def get_device_limit_info(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    """Returns the user's current device count, plan limit, and plan name."""
+    plan = (current_user.subscription_plan or "free").lower()
+    limit = get_device_limit(plan)
+    count = len(current_user.devices)
+    return {
+        "plan":       plan,
+        "limit":      limit,
+        "used":       count,
+        "remaining":  max(0, limit - count),
+        "at_limit":   count >= limit,
+    }
 
 @router.get("/{device_id}", response_model=schemas.DeviceResponse)
 def get_device(device_id: str, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
@@ -22,7 +49,23 @@ def get_device(device_id: str, current_user: models.User = Depends(auth.get_curr
 
 @router.post("/", response_model=schemas.DeviceResponse)
 def create_device(device: schemas.DeviceBase, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    # Check if device ID already exists
+    # ── Plan limit check ────────────────────────────────────────────────────
+    plan = (current_user.subscription_plan or "free").lower()
+    limit = get_device_limit(plan)
+    current_count = db.query(models.Device).filter(models.Device.owner_id == current_user.id).count()
+
+    if current_count >= limit:
+        plan_display = plan.capitalize()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Device limit reached. Your {plan_display} plan allows a maximum of {limit} node(s). "
+                f"You currently have {current_count}/{limit}. "
+                f"Upgrade your subscription to add more nodes."
+            )
+        )
+
+    # Check if device ID already exists globally
     existing_device = db.query(models.Device).filter(models.Device.device_id == device.device_id).first()
     if existing_device:
         raise HTTPException(status_code=400, detail="Device ID already registered")
@@ -39,6 +82,8 @@ def create_device(device: schemas.DeviceBase, current_user: models.User = Depend
     db.add(new_device)
     db.commit()
     db.refresh(new_device)
+    
+    print(f"[Devices] Node deployed: {device.device_id} (type={device.device_type}) for user={current_user.email} [{current_count + 1}/{limit} on {plan}]")
     return new_device
 
 @router.get("/{device_id}/readings", response_model=List[schemas.SensorDataResponse])
@@ -49,8 +94,6 @@ def get_device_readings(device_id: str, limit: int = 20, current_user: models.Us
         raise HTTPException(status_code=404, detail="Device not found")
         
     readings = db.query(models.SensorData).filter(models.SensorData.device_id == device_id).order_by(models.SensorData.timestamp.desc()).limit(limit).all()
-    # Return reversed to show chronological order in graphs if needed, but API usually sends latest first or user sorts. 
-    # Let's return latest first (descending) as queried. Frontend can reverse.
     return readings
 
 @router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -60,8 +103,7 @@ def delete_device(device_id: str, current_user: models.User = Depends(auth.get_c
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
     
-    # Delete associated readings first (optional if cascade is set, but good for safety)
-    # Delete associated readings first (optional if cascade is set, but good for safety)
+    # Delete associated readings first (cascade safety)
     db.query(models.SensorData).filter(models.SensorData.device_id == device_id).delete()
     db.query(models.LDRReading).filter(models.LDRReading.device_id == device_id).delete()
     db.query(models.DeviceOutput).filter(models.DeviceOutput.device_id == device_id).delete()

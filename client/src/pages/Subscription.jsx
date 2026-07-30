@@ -19,7 +19,7 @@ const plans = [
         icon: Cpu,
         color: "emerald",
         features: [
-            "Up to 2 active IoT devices",
+            "Up to 5 active IoT nodes",
             "Real-time sensor graphs",
             "1-day historical data retention",
             "Basic alerts notification"
@@ -33,7 +33,7 @@ const plans = [
         icon: Zap,
         color: "violet",
         features: [
-            "Up to 10 active IoT devices",
+            "Up to 15 active IoT nodes",
             "Real-time + interactive analytical charts",
             "30-day historical data retention",
             "Custom automation rule triggers",
