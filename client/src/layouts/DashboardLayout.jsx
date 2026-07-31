@@ -112,19 +112,39 @@ const DashboardLayout = () => {
 
     return (
         <LayoutWrapper className="flex h-screen bg-[#020617] overflow-hidden">
-            {/* Mobile Header - Kept for mobile toggle but simplified */}
-            <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-[#020617]/80 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center">
+            {/* Mobile Header */}
+            <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-[#020617]/90 backdrop-blur-md border-b border-white/10 p-3 px-4 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                    <Zap className="text-violet-500" size={24} />
-                    <span className="text-xl font-bold tracking-tight text-white">Indian<span className="text-violet-400">IoT</span> <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium ml-1">by TRONIX365</span></span>
+                    <Zap className="text-violet-500 shrink-0" size={22} />
+                    <span className="text-lg font-bold tracking-tight text-white flex items-baseline truncate">
+                        Indian<span className="text-violet-400">IoT</span> 
+                        <span className="text-[9px] text-slate-400 uppercase tracking-wider font-medium ml-1 hidden xs:inline">by TRONIX365</span>
+                    </span>
                 </div>
-                <button
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="p-2 -mr-2 text-slate-400 hover:text-white rounded-lg"
-                >
-                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                <div className="flex items-center gap-2">
+                    <UserDropdown />
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="p-2 text-slate-400 hover:text-white rounded-lg bg-white/5 border border-white/5"
+                        aria-label="Toggle Navigation Menu"
+                    >
+                        {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </div>
             </div>
+
+            {/* Mobile Backdrop Overlay */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Sidebar */}
             <AnimatePresence mode="wait">
@@ -135,7 +155,7 @@ const DashboardLayout = () => {
                         exit={{ x: -300, opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeOut" }}
                         className={clsx(
-                            "fixed inset-y-0 left-0 z-50 w-72 bg-[#020617]/80 backdrop-blur-2xl border-r border-white/5 flex flex-col md:relative",
+                            "fixed inset-y-0 left-0 z-50 w-72 bg-[#020617]/95 backdrop-blur-2xl border-r border-white/5 flex flex-col md:relative shadow-2xl md:shadow-none",
                             !mobileMenuOpen && "hidden md:flex"
                         )}
                     >
@@ -154,8 +174,17 @@ const DashboardLayout = () => {
                         </div>
 
                         {/* Mobile Sidebar Header */}
-                        <div className="p-6 md:hidden flex justify-between items-center border-b border-white/5 pt-20">
-                            <h1 className="text-xl font-bold tracking-tight text-white">Menu</h1>
+                        <div className="p-6 md:hidden flex justify-between items-center border-b border-white/5 pt-16">
+                            <div className="flex items-center gap-2">
+                                <Zap className="text-violet-400" size={20} />
+                                <span className="text-lg font-bold text-white">Menu Navigation</span>
+                            </div>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-white/5"
+                            >
+                                <X size={18} />
+                            </button>
                         </div>
 
                         <nav className="flex-1 px-6 space-y-2 mt-8 md:mt-0">

@@ -300,7 +300,7 @@ const Subscription = () => {
                                 </div>
 
                                 <h3 className="text-lg font-bold text-white mt-4">{plan.name}</h3>
-                                <p className="text-xs text-slate-400 mt-2 leading-relaxed h-12 overflow-hidden">{plan.desc}</p>
+                                <p className="text-xs text-slate-400 mt-2 leading-relaxed min-h-[48px]">{plan.desc}</p>
 
                                 <div className="h-px bg-white/5 my-4"></div>
 

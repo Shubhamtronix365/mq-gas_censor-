@@ -195,37 +195,37 @@ const LDRDashboard = ({ id, device }) => {
             {/* Main Layout Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
-                {/* LEFT COLUMN: Smart Light Controller (Rugged Physical Console Unit) */}
+                {/* LEFT COLUMN: Smart Light Controller (Rugged Physical Console Unit - Adjusted Size) */}
                 <div className="lg:col-span-4 xl:col-span-4">
                     <motion.div 
                         variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }} 
-                        className="relative mx-auto w-full bg-gradient-to-b from-[#252830] to-[#15171c] border-4 border-[#353942] rounded-[2.5rem] p-5 md:p-6 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),_inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.5)] flex flex-col gap-5"
+                        className="relative mx-auto max-w-md w-full bg-gradient-to-b from-[#252830] to-[#15171c] border-4 border-[#353942] rounded-[2.5rem] p-4 md:p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),_inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.5)] flex flex-col gap-4"
                     >
                         {/* Side Glowing Amber LED Light Strips */}
-                        <div className="absolute top-14 bottom-14 left-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-r-full"></div>
-                        <div className="absolute top-14 bottom-14 right-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-l-full"></div>
+                        <div className="absolute top-12 bottom-12 left-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-r-full"></div>
+                        <div className="absolute top-12 bottom-12 right-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-l-full"></div>
 
                         {/* Top-Left Hex Screw */}
-                        <div className="absolute top-4 left-4 w-6 h-6 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
-                            <div className="w-3 h-3 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="absolute top-3.5 left-3.5 w-5 h-5 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
                                 <div className="w-1 h-1 rounded-full bg-[#2a2d33]"></div>
                             </div>
                         </div>
                         {/* Top-Right Hex Screw */}
-                        <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
-                            <div className="w-3 h-3 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="absolute top-3.5 right-3.5 w-5 h-5 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
                                 <div className="w-1 h-1 rounded-full bg-[#2a2d33]"></div>
                             </div>
                         </div>
                         {/* Bottom-Left Hex Screw */}
-                        <div className="absolute bottom-4 left-4 w-6 h-6 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
-                            <div className="w-3 h-3 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="absolute bottom-3.5 left-3.5 w-5 h-5 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
                                 <div className="w-1 h-1 rounded-full bg-[#2a2d33]"></div>
                             </div>
                         </div>
                         {/* Bottom-Right Hex Screw */}
-                        <div className="absolute bottom-4 right-4 w-6 h-6 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
-                            <div className="w-3 h-3 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="absolute bottom-3.5 right-3.5 w-5 h-5 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
                                 <div className="w-1 h-1 rounded-full bg-[#2a2d33]"></div>
                             </div>
                         </div>
@@ -233,7 +233,7 @@ const LDRDashboard = ({ id, device }) => {
                         {/* Top Status LED Bar */}
                         <div className="flex justify-center w-full mt-1 mb-0.5">
                             <div className={clsx(
-                                "w-28 h-2 rounded-full border border-slate-900 transition-all duration-500",
+                                "w-24 h-2 rounded-full border border-slate-900 transition-all duration-500",
                                 !isScreenOn 
                                     ? "bg-slate-800 shadow-none" 
                                     : "bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_5px_#f59e0b]"
@@ -241,7 +241,7 @@ const LDRDashboard = ({ id, device }) => {
                         </div>
 
                         {/* LCD Recessed Screen */}
-                        <div className="relative overflow-hidden bg-[#080a11] rounded-2xl border-2 border-[#16191f] shadow-[inset_0_4px_12px_rgba(0,0,0,0.9)] p-6 min-h-[340px] flex flex-col justify-between transition-all duration-300">
+                        <div className="relative overflow-hidden bg-[#080a11] rounded-2xl border-2 border-[#16191f] shadow-[inset_0_4px_12px_rgba(0,0,0,0.9)] p-5 min-h-[290px] flex flex-col justify-between transition-all duration-300">
                             {/* Subtle CRT scanlines overlay */}
                             <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_50%,rgba(0,0,0,1)_50%)] bg-[size:100%_4px]"></div>
                             {/* Glass Reflection overlay */}
@@ -254,31 +254,31 @@ const LDRDashboard = ({ id, device }) => {
                             ) : (
                                 <>
                                     {/* Screen Header */}
-                                    <div className="text-center border-b border-white/5 pb-3">
+                                    <div className="text-center border-b border-white/5 pb-2.5">
                                         <div className="text-xs font-extrabold text-slate-300 tracking-widest uppercase">SMART LIGHT</div>
                                         <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-0.5">CONTROLLER</div>
                                     </div>
 
                                     {/* Center Display Area */}
-                                    <div className="flex flex-col items-center justify-center py-6 gap-3">
+                                    <div className="flex flex-col items-center justify-center py-4 gap-2.5">
                                         {/* Bulb Circle Icon */}
-                                        <div className="relative w-24 h-24 rounded-full border border-yellow-500/40 bg-yellow-500/10 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.25)] group">
-                                            <Lightbulb size={40} className="text-yellow-400 stroke-[2] drop-shadow-[0_0_10px_rgba(234,179,8,0.8)] transition-transform group-hover:scale-110 duration-300" />
+                                        <div className="relative w-20 h-20 rounded-full border border-yellow-500/40 bg-yellow-500/10 flex items-center justify-center shadow-[0_0_25px_rgba(234,179,8,0.25)] group">
+                                            <Lightbulb size={34} className="text-yellow-400 stroke-[2] drop-shadow-[0_0_10px_rgba(234,179,8,0.8)] transition-transform group-hover:scale-110 duration-300" />
                                         </div>
 
                                         {/* Analog Intensity Value */}
-                                        <div className="text-center mt-1">
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">ANALOG INTENSITY</div>
-                                            <div className="text-3xl md:text-4xl font-black text-white tracking-tight leading-none">
-                                                {latest?.analog_value ?? "--"} <span className="text-sm font-semibold text-slate-500">/ 4095</span>
+                                        <div className="text-center mt-0.5">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ANALOG INTENSITY</div>
+                                            <div className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none">
+                                                {latest?.analog_value ?? "--"} <span className="text-xs font-semibold text-slate-500">/ 4095</span>
                                             </div>
                                         </div>
 
                                         {/* Digital Status Pill */}
-                                        <div className="text-center mt-2 w-full">
-                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">DIGITAL STATUS</div>
+                                        <div className="text-center mt-1.5 w-full">
+                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">DIGITAL STATUS</div>
                                             <div className={clsx(
-                                                "w-full py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider border transition-all shadow-inner",
+                                                "w-full py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider border transition-all shadow-inner",
                                                 latest?.digital_value
                                                     ? "bg-blue-500/20 border-blue-500/40 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                                                     : "bg-slate-900/90 border-white/5 text-slate-400"
@@ -292,24 +292,24 @@ const LDRDashboard = ({ id, device }) => {
                         </div>
 
                         {/* Bezel Controls */}
-                        <div className="flex justify-center items-center gap-6 mt-1">
+                        <div className="flex justify-center items-center gap-5 mt-0.5">
                             <button 
                                 onClick={() => setIsScreenOn(prev => !prev)}
                                 className={clsx(
-                                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4)] active:scale-95",
-                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white" : "bg-slate-900 text-slate-600"
+                                    "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4)] active:scale-95",
+                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white cursor-pointer" : "bg-slate-900 text-slate-600"
                                 )}
                                 title="Previous"
                             >
-                                <ChevronLeft size={18} />
+                                <ChevronLeft size={16} />
                             </button>
 
                             <button 
                                 onClick={() => setIsScreenOn(prev => !prev)}
-                                className="w-12 h-12 rounded-full bg-gradient-to-b from-[#2d3139] to-[#1a1c20] hover:from-[#353a43] hover:to-[#22252a] border border-slate-700/60 shadow-[0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center active:scale-95 transition-all cursor-pointer"
+                                className="w-11 h-11 rounded-full bg-gradient-to-b from-[#2d3139] to-[#1a1c20] hover:from-[#353a43] hover:to-[#22252a] border border-slate-700/60 shadow-[0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center active:scale-95 transition-all cursor-pointer"
                                 title="Power Toggle"
                             >
-                                <Power size={20} className={clsx(
+                                <Power size={18} className={clsx(
                                     "transition-all duration-300",
                                     isScreenOn ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" : "text-slate-600"
                                 )} />
@@ -318,12 +318,12 @@ const LDRDashboard = ({ id, device }) => {
                             <button 
                                 onClick={() => setIsScreenOn(prev => !prev)}
                                 className={clsx(
-                                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4)] active:scale-95",
-                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white" : "bg-slate-900 text-slate-600"
+                                    "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4)] active:scale-95",
+                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white cursor-pointer" : "bg-slate-900 text-slate-600"
                                 )}
                                 title="Next"
                             >
-                                <ChevronRight size={18} />
+                                <ChevronRight size={16} />
                             </button>
                         </div>
                     </motion.div>
