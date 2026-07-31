@@ -116,7 +116,7 @@ const DashboardLayout = () => {
             <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-[#020617]/80 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                     <Zap className="text-violet-500" size={24} />
-                    <span className="text-xl font-bold tracking-tight text-white">TRONIX<span className="font-light text-violet-400">365</span></span>
+                    <span className="text-xl font-bold tracking-tight text-white">Indian<span className="text-violet-400">IoT</span> <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium ml-1">by TRONIX365</span></span>
                 </div>
                 <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -145,8 +145,10 @@ const DashboardLayout = () => {
                                     <Zap className="text-violet-400" size={24} />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold tracking-tight text-white">TRONIX<span className="text-violet-500">365</span></h1>
-                                    <p className="text-[10px] text-slate-500 tracking-[0.2em] uppercase font-bold">Indianiiot</p>
+                                    <h1 className="text-2xl font-bold tracking-tight text-white">Indian<span className="text-violet-500">IoT</span></h1>
+                                    <p className="text-[10px] text-slate-400 tracking-[0.15em] uppercase font-bold flex items-center gap-1">
+                                        <span className="text-slate-500">BY</span> TRONIX<span className="text-violet-400">365</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
