@@ -53,8 +53,33 @@ def run_daily_expiry_check():
 scheduler = BackgroundScheduler()
 scheduler.add_job(run_daily_expiry_check, "cron", hour=0, minute=0)
 
+def run_auto_migrations():
+    """Ensure database schema columns are up to date on startup."""
+    from sqlalchemy import text
+    try:
+        with engine.connect() as connection:
+            user_cols = [
+                ("full_name", "VARCHAR"),
+                ("phone_number", "VARCHAR"),
+                ("subscription_plan", "VARCHAR DEFAULT 'starter'"),
+                ("subscription_status", "VARCHAR DEFAULT 'active'"),
+                ("subscription_currency", "VARCHAR DEFAULT 'INR'"),
+                ("subscription_expiry", "TIMESTAMP"),
+                ("google_id", "VARCHAR"),
+                ("is_admin", "BOOLEAN DEFAULT FALSE")
+            ]
+            for col_name, col_type in user_cols:
+                try:
+                    connection.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                except Exception:
+                    pass
+            connection.commit()
+    except Exception as e:
+        print(f"Auto-migration exception: {e}")
+
 @app.on_event("startup")
 def startup_event():
+    run_auto_migrations()
     scheduler.start()
     print("APScheduler started — daily subscription expiry checker running at midnight UTC.")
 
