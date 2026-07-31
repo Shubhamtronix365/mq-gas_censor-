@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
                 axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
                 localStorage.setItem("token", token);
                 try {
-                    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/users/me`);
+                    const response = await axios.get(`${API_BASE_URL}/api/v1/users/me`);
                     setUser(response.data);
                 } catch (error) {
                     console.error("Failed to fetch user profile", error);
@@ -43,23 +44,25 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
-                username: email,
-                password: password
-            }, {
+            const formData = new URLSearchParams();
+            formData.append("username", email);
+            formData.append("password", password);
+
+            const response = await axios.post(`${API_BASE_URL}/auth/login`, formData, {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
             setToken(response.data.access_token);
             return { success: true };
         } catch (error) {
             console.error("Login failed", error);
-            return { success: false, error: error.response?.data?.detail || "Login failed" };
+            const detailMsg = error.response?.data?.detail || (error.message === "Network Error" ? "Network or CORS error connecting to backend API." : "Login failed");
+            return { success: false, error: detailMsg };
         }
     };
 
     const googleLogin = async (credential) => {
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/google`, {
+            const response = await axios.post(`${API_BASE_URL}/auth/google`, {
                 credential
             });
             setToken(response.data.access_token);
@@ -72,7 +75,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (email, password) => {
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
+            await axios.post(`${API_BASE_URL}/auth/register`, {
                 email,
                 password
             });
@@ -84,7 +87,7 @@ export const AuthProvider = ({ children }) => {
 
     const reloadUser = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/users/me`);
+            const response = await axios.get(`${API_BASE_URL}/api/v1/users/me`);
             setUser(response.data);
         } catch (error) {
             console.error("Failed to reload user profile", error);

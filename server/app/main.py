@@ -74,8 +74,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
-        # Limit rate on auth and edge sensor ingestion routes
-        is_throttled = any(p in path for p in ["/auth/login", "/auth/register", "/auth/google", "/api/v1/ingest", "/api/v1/ldr"])
+        # Limit rate on auth and edge sensor ingestion routes (do not throttle dashboard read polling)
+        is_throttled = any(p in path for p in ["/auth/login", "/auth/register", "/auth/google", "/api/v1/ingest"])
         
         if is_throttled:
             # Use proxy forwarded header if behind reverse proxy, else fallback to standard client host
@@ -89,7 +89,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 if len(self.requests[ip]) >= self.limit:
                     return JSONResponse(
                         status_code=429,
-                        content={"detail": "Too many requests. Throttled to prevent brute force. Please wait a minute."}
+                        content={"detail": "Too many authentication/ingestion requests. Please wait a minute before retrying."}
                     )
                 
                 self.requests[ip].append(now)
@@ -99,23 +99,38 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 # Add Rate Limiter Middleware
 app.add_middleware(RateLimitMiddleware, limit=30, window=60)
 
-# Configure CORS securely (No wildcards in production)
+# Configure CORS dynamically for local & hosted deployment environments
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+custom_origins = []
 if allowed_origins_str:
-    origins = [org.strip() for org in allowed_origins_str.split(",") if org.strip()]
-else:
-    origins = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://192.168.1.7:5173",
-        "https://indianiiot.com",
-        "https://www.indianiiot.com",
-        "https://mq-gas-censor-sensegrid-api-tronix.onrender.com",
-    ]
+    custom_origins = [org.strip().rstrip("/") for org in allowed_origins_str.split(",") if org.strip()]
+
+default_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:4173",
+    "http://localhost:8000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:4173",
+    "http://127.0.0.1:8000",
+    "http://192.168.1.7:5173",
+    "https://indianiiot.com",
+    "https://www.indianiiot.com",
+    "https://mq-gas-censor-tronix.pages.dev",
+    "https://mq-gas-censor-sensegrid-api-tronix.onrender.com",
+]
+
+# Combine and deduplicate origins without trailing slashes
+origins = list(set(default_origins + custom_origins))
+
+# Regex matching local dev ports and production deployment domains
+origin_regex = r"https?://(localhost|127\.0\.0\.1|.*\.pages\.dev|.*\.onrender\.com|indianiiot\.com|www\.indianiiot\.com)(:\d+)?"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -49,6 +49,7 @@ class UserResponse(UserBase):
     subscription_currency: Optional[str] = "INR"
     subscription_expiry: Optional[datetime] = None
     google_id: Optional[str] = None
+    is_admin: bool = False
     
     class Config:
         from_attributes = True
@@ -140,3 +141,52 @@ class DeviceOutputResponse(DeviceOutputCreate):
     last_updated: datetime
     class Config:
         from_attributes = True
+
+# ── Admin Schemas ──────────────────────────────────────────────────────────
+
+class PlanConfigResponse(BaseModel):
+    id: int
+    plan_id: str
+    name: str
+    description: Optional[str] = None
+    price_inr: str
+    price_usd: str
+    display_price_inr: str
+    display_price_usd: str
+    max_devices: int
+    duration_days: int
+    features: List[str] = []
+    is_active: bool
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class PlanConfigUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price_inr: Optional[str] = None
+    price_usd: Optional[str] = None
+    display_price_inr: Optional[str] = None
+    display_price_usd: Optional[str] = None
+    max_devices: Optional[int] = None
+    duration_days: Optional[int] = None
+    features: Optional[List[str]] = None
+    is_active: Optional[bool] = None
+
+class AdminUserSubscriptionUpdate(BaseModel):
+    subscription_plan: str
+    subscription_status: Optional[str] = "active"
+    subscription_currency: Optional[str] = "INR"
+    subscription_expiry: Optional[datetime] = None
+
+class AdminPasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=8, max_length=64)
+
+class AdminStatsResponse(BaseModel):
+    total_users: int
+    total_devices: int
+    total_admins: int
+    plan_distribution: Dict[str, int]   # {"starter": 12, "professional": 5, ...}
+    active_subscriptions: int

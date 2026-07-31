@@ -49,21 +49,25 @@ def get_device(device_id: str, current_user: models.User = Depends(auth.get_curr
 
 @router.post("/", response_model=schemas.DeviceResponse)
 def create_device(device: schemas.DeviceBase, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    # ── Plan limit check ────────────────────────────────────────────────────
-    plan = (current_user.subscription_plan or "free").lower()
-    limit = get_device_limit(plan)
-    current_count = db.query(models.Device).filter(models.Device.owner_id == current_user.id).count()
+    # ── Admin bypass — unlimited nodes ─────────────────────────────────────
+    if current_user.is_admin:
+        print(f"[Devices] Admin {current_user.email} deploying node — limit check bypassed")
+    else:
+        # ── Plan limit check ────────────────────────────────────────────────
+        plan = (current_user.subscription_plan or "free").lower()
+        limit = get_device_limit(plan)
+        current_count = db.query(models.Device).filter(models.Device.owner_id == current_user.id).count()
 
-    if current_count >= limit:
-        plan_display = plan.capitalize()
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                f"Device limit reached. Your {plan_display} plan allows a maximum of {limit} node(s). "
-                f"You currently have {current_count}/{limit}. "
-                f"Upgrade your subscription to add more nodes."
+        if current_count >= limit:
+            plan_display = plan.capitalize()
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"Device limit reached. Your {plan_display} plan allows a maximum of {limit} node(s). "
+                    f"You currently have {current_count}/{limit}. "
+                    f"Upgrade your subscription to add more nodes."
+                )
             )
-        )
 
     # Check if device ID already exists globally
     existing_device = db.query(models.Device).filter(models.Device.device_id == device.device_id).first()

@@ -33,7 +33,7 @@ PAYU_GATEWAY_URL = (
     else "https://test.payu.in/_payment"
 )
 
-print(f"[PayU] Environment: {'PRODUCTION ✅' if IS_PRODUCTION else 'SANDBOX/TEST ⚠️'}")
+print(f"[PayU] Environment: {'PRODUCTION [OK]' if IS_PRODUCTION else 'SANDBOX/TEST [TEST]'}")
 print(f"[PayU] Gateway URL: {PAYU_GATEWAY_URL}")
 
 class PaymentInitiateRequest(BaseModel):
@@ -63,21 +63,41 @@ def initiate_payment(
 
     plan_id = payload.plan_id.lower()
     currency = payload.currency.upper()
-    
-    # Secure price mapping from backend only — prevents frontend price tampering
-    prices = {
+
+    # ── Fetch live pricing from DB (dynamic, admin-editable) ──────────────
+    # Fallback to hardcoded defaults if plan_configs table is empty or plan not found
+    _FALLBACK_PRICES = {
         "starter":      {"INR": "799.00",  "USD": "9.99"},
         "professional": {"INR": "1999.00", "USD": "24.99"},
-        "enterprise":   {"INR": "7999.00", "USD": "99.99"}
+        "enterprise":   {"INR": "7999.00", "USD": "99.99"},
     }
-    
-    if plan_id not in prices or currency not in ["INR", "USD"]:
+
+    plan_config = db.query(models.PlanConfig).filter(
+        models.PlanConfig.plan_id == plan_id,
+        models.PlanConfig.is_active == True
+    ).first()
+
+    if plan_config:
+        prices = {
+            "INR": plan_config.price_inr,
+            "USD": plan_config.price_usd
+        }
+    else:
+        prices = _FALLBACK_PRICES.get(plan_id)
+        if not prices:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid plan_id or currency selection"
+            )
+
+    if currency not in ["INR", "USD"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid plan_id or currency selection"
+            detail="Invalid currency. Must be INR or USD."
         )
-        
-    amount = prices[plan_id][currency]
+
+    # prices is already the flat {"INR": "799.00", "USD": "9.99"} dict at this point
+    amount = prices[currency]
     # Use a unique txnid with timestamp + random suffix (max 25 chars for PayU)
     txnid = f"SG{int(time.time())}{random.randint(100, 999)}"
     productinfo = f"SenseGrid {plan_id.capitalize()} Plan"
@@ -189,16 +209,20 @@ def payment_callback(
                 currency=udf2.upper(),
                 txnid=txnid
             )
+            print(f"[PayU] [SUCCESS]: Upgraded {email} -> {plan_name} | Expires: {expiry_dt.date()} | TXN: {txnid}")
+            return RedirectResponse(
+                url=f"{FRONTEND_URL}/dashboard?payment=success&plan={plan_name}",
+                status_code=status.HTTP_303_SEE_OTHER
+            )
         else:
-            print(f"[PayU] ⚠️ SUCCESS callback but user not found for email: {email}")
-            
-        return RedirectResponse(
-            url=f"{udf3}/payment/success?plan={udf1}&txnid={txnid}&amount={amount}&currency={udf2}",
-            status_code=303
-        )
+            print(f"[PayU] [WARNING] SUCCESS callback but user not found for email: {email}")
+            return RedirectResponse(
+                url=f"{FRONTEND_URL}/subscription?payment=user_not_found",
+                status_code=status.HTTP_303_SEE_OTHER
+            )
     else:
-        print(f"[PayU] ❌ FAILED: {email} | TXN: {txnid} | Status: {status}")
+        print(f"[PayU] [FAILED]: {email} | TXN: {txnid} | Status: {status_code_val}")
         return RedirectResponse(
-            url=f"{udf3}/payment/failure?txnid={txnid}&plan={udf1}&amount={amount}&currency={udf2}&reason={status}",
+            url=f"{udf3}/payment/failure?txnid={txnid}&plan={udf1}&amount={amount}&currency={udf2}&reason={status_code_val}",
             status_code=303
         )

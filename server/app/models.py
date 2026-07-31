@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, JSON, Text
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -12,13 +12,36 @@ class User(Base):
     phone_number = Column(String, nullable=True)
     preferences = Column(JSON, default={})
     hashed_password = Column(String, nullable=True)
-    subscription_plan = Column(String, default="starter") # starter, professional, enterprise
-    subscription_status = Column(String, default="active") # active, expired, trial
-    subscription_currency = Column(String, default="INR") # INR, USD
+    subscription_plan = Column(String, default="starter")     # starter, professional, enterprise
+    subscription_status = Column(String, default="active")    # active, expired, trial
+    subscription_currency = Column(String, default="INR")     # INR, USD
     subscription_expiry = Column(DateTime, nullable=True)
     google_id = Column(String, nullable=True, index=True)
-    
+    is_admin = Column(Boolean, default=False)                  # admin flag — bypasses all limits
+
     devices = relationship("Device", back_populates="owner")
+
+class PlanConfig(Base):
+    """
+    Dynamically-editable subscription plan configurations stored in the database.
+    Admin can update these via the admin dashboard.
+    """
+    __tablename__ = "plan_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    plan_id = Column(String, unique=True, index=True)   # slug: starter, professional, enterprise
+    name = Column(String)                                # Display name
+    description = Column(Text, nullable=True)
+    price_inr = Column(String, default="0.00")          # Numeric string for PayU: "799.00"
+    price_usd = Column(String, default="0.00")          # Numeric string for PayU: "9.99"
+    display_price_inr = Column(String, default="₹0")   # UI label: "₹799"
+    display_price_usd = Column(String, default="$0")   # UI label: "$9.99"
+    max_devices = Column(Integer, default=5)
+    duration_days = Column(Integer, default=30)          # Subscription cycle length
+    features = Column(JSON, default=[])                  # List of feature strings
+    is_active = Column(Boolean, default=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 
 class Device(Base):
     __tablename__ = "devices"
