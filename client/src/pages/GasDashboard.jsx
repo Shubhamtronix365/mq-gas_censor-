@@ -241,12 +241,17 @@ const GasDashboard = ({ id, device }) => {
 
             {/* Responsive Main Display Container */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                {/* Column 1: Custom Rugged Sensor Unit Console (Adjusted Size) */}
+                {/* Column 1: Custom Rugged Sensor Unit Console (With TRONIX365 Branding) */}
                 <div className="lg:col-span-6 xl:col-span-5 flex justify-center items-center w-full">
                     <motion.div 
                         variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }} 
                         className="relative mx-auto max-w-lg w-full bg-gradient-to-b from-[#2a2e35] to-[#181a1e] border-4 border-[#3a3f47] rounded-[2.5rem] p-5 md:p-6 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8),_inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.4)] flex flex-col gap-5 select-none"
                     >
+                        {/* Engraved TRONIX365 Top Bezel Brand Mark */}
+                        <div className="text-[10px] font-black tracking-[0.35em] text-slate-400/90 uppercase text-center select-none shadow-sm py-0.5">
+                            TRONIX<span className="text-violet-400">365</span>
+                        </div>
+
                         {/* Top-Left Hex Screw */}
                         <div className="absolute top-4 left-4 w-6 h-6 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
                             <div className="w-3 h-3 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
@@ -273,7 +278,7 @@ const GasDashboard = ({ id, device }) => {
                         </div>
 
                         {/* Top Status LED Bar */}
-                        <div className="flex justify-center w-full mt-1 mb-0.5">
+                        <div className="flex justify-center w-full mb-0.5">
                             <div className={clsx(
                                 "w-28 h-2 rounded-full bg-slate-950 border border-slate-900 transition-all duration-500",
                                 !isScreenOn 
@@ -305,7 +310,8 @@ const GasDashboard = ({ id, device }) => {
                                     {/* Header */}
                                     <div className="flex justify-between items-center border-b border-white/5 pb-2.5">
                                         <div>
-                                            <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">GAS SENSOR UNIT</div>
+                                            <div className="text-xs font-black text-slate-300 tracking-[0.25em] uppercase">TRONIX<span className="text-violet-400">365</span></div>
+                                            <div className="text-[9px] font-bold text-slate-500 tracking-[0.15em] uppercase mt-0.5">GAS SENSOR UNIT</div>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span className={clsx(

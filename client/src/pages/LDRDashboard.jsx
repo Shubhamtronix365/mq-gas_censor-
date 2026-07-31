@@ -184,26 +184,28 @@ const LDRDashboard = ({ id, device }) => {
                         </div>
                     )}
 
-                    {/* System Online Badge */}
-                    <div className="bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></span>
-                        <span className="text-xs font-bold text-emerald-400 tracking-wide">System Online</span>
-                    </div>
+                    {/* Dynamic System Online / Offline Badge */}
+                    <NodeStatusBadge device={device} lastSeen={latest?.timestamp} timeoutSeconds={30} />
                 </div>
             </motion.div>
 
             {/* Main Layout Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
-                {/* LEFT COLUMN: Smart Light Controller (Rugged Physical Console Unit - Adjusted Size) */}
+                {/* LEFT COLUMN: Smart Light Controller (Rugged Physical Console Unit with Engraved TRONIX365 Branding) */}
                 <div className="lg:col-span-4 xl:col-span-4">
                     <motion.div 
                         variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }} 
                         className="relative mx-auto max-w-md w-full bg-gradient-to-b from-[#252830] to-[#15171c] border-4 border-[#353942] rounded-[2.5rem] p-4 md:p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),_inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.5)] flex flex-col gap-4"
                     >
+                        {/* Engraved TRONIX365 Top Bezel Brand Mark */}
+                        <div className="text-[10px] font-black tracking-[0.35em] text-slate-400/90 uppercase text-center select-none shadow-sm py-0.5">
+                            TRONIX<span className="text-yellow-400">365</span>
+                        </div>
+
                         {/* Side Glowing Amber LED Light Strips */}
-                        <div className="absolute top-12 bottom-12 left-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-r-full"></div>
-                        <div className="absolute top-12 bottom-12 right-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-l-full"></div>
+                        <div className="absolute top-16 bottom-14 left-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-r-full"></div>
+                        <div className="absolute top-16 bottom-14 right-0 w-1.5 bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_8px_#f59e0b] rounded-l-full"></div>
 
                         {/* Top-Left Hex Screw */}
                         <div className="absolute top-3.5 left-3.5 w-5 h-5 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
@@ -231,7 +233,7 @@ const LDRDashboard = ({ id, device }) => {
                         </div>
 
                         {/* Top Status LED Bar */}
-                        <div className="flex justify-center w-full mt-1 mb-0.5">
+                        <div className="flex justify-center w-full mb-0.5">
                             <div className={clsx(
                                 "w-24 h-2 rounded-full border border-slate-900 transition-all duration-500",
                                 !isScreenOn 
@@ -255,8 +257,8 @@ const LDRDashboard = ({ id, device }) => {
                                 <>
                                     {/* Screen Header */}
                                     <div className="text-center border-b border-white/5 pb-2.5">
-                                        <div className="text-xs font-extrabold text-slate-300 tracking-widest uppercase">SMART LIGHT</div>
-                                        <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-0.5">CONTROLLER</div>
+                                        <div className="text-xs font-black text-slate-300 tracking-[0.25em] uppercase">TRONIX<span className="text-yellow-400">365</span></div>
+                                        <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-0.5">SMART LIGHT CONTROLLER</div>
                                     </div>
 
                                     {/* Center Display Area */}
