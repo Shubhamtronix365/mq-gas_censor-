@@ -4,6 +4,7 @@ import { Sun, Lightbulb, Key, Copy, Check, Zap, Power, Plus, Trash2, ArrowUpRigh
 import AutoBulb from "../components/AutoBulb";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from "framer-motion";
+import NodeStatusBadge from "../components/NodeStatusBadge";
 import { clsx } from "clsx";
 
 const LDRDashboard = ({ id, device }) => {
@@ -141,8 +142,9 @@ const LDRDashboard = ({ id, device }) => {
             {/* Header */}
             <motion.div variants={{ hidden: { opacity: 0, y: -20 }, show: { opacity: 1, y: 0 } }} className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight flex-wrap">
                         {id}
+                        <NodeStatusBadge device={device} />
                         <span className="text-xs px-3 py-1 rounded-full border bg-yellow-500/10 text-yellow-400 border-yellow-500/20 font-bold shadow-[0_0_15px_rgba(234,179,8,0.2)]">
                             LDR SENSOR
                         </span>

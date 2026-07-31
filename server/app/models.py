@@ -51,6 +51,7 @@ class Device(Base):
     device_token = Column(String) # For ESP32 authentication
     device_type = Column(String, default="gas_sensor") # gas_sensor, ldr_sensor
     created_at = Column(DateTime, default=datetime.utcnow)
+    last_seen = Column(DateTime, nullable=True) # Timestamp of last received telemetry/heartbeat
 
     owner = relationship("User", back_populates="devices")
     readings = relationship("SensorData", back_populates="device")

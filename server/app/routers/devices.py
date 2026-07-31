@@ -22,9 +22,30 @@ def get_device_limit(plan: str) -> int:
     """Return the max nodes allowed for a given subscription plan name."""
     return PLAN_DEVICE_LIMITS.get((plan or "free").lower(), 2)
 
+from datetime import datetime
+from fastapi import Header
+
+ONLINE_TIMEOUT_SECONDS = 30
+
+def format_device_response(device: models.Device) -> dict:
+    now = datetime.utcnow()
+    last_seen = device.last_seen
+    is_online = False
+    if last_seen:
+        is_online = (now - last_seen).total_seconds() <= ONLINE_TIMEOUT_SECONDS
+
+    return {
+        "device_id": device.device_id,
+        "device_type": device.device_type,
+        "device_token": device.device_token,
+        "created_at": device.created_at,
+        "last_seen": device.last_seen,
+        "is_online": is_online
+    }
+
 @router.get("/", response_model=List[schemas.DeviceResponse])
 def get_my_devices(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    return current_user.devices
+    return [format_device_response(d) for d in current_user.devices]
 
 @router.get("/limit-info")
 def get_device_limit_info(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
@@ -45,7 +66,24 @@ def get_device(device_id: str, current_user: models.User = Depends(auth.get_curr
     device = db.query(models.Device).filter(models.Device.device_id == device_id, models.Device.owner_id == current_user.id).first()
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
-    return device
+    return format_device_response(device)
+
+@router.post("/{device_id}/ping")
+def ping_device(
+    device_id: str,
+    device_token: str = Header(..., alias="Device-Token"),
+    db: Session = Depends(database.get_db)
+):
+    """Heartbeat endpoint for ESP32 nodes to maintain active Online status."""
+    device = db.query(models.Device).filter(models.Device.device_id == device_id).first()
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    if device.device_token != device_token:
+        raise HTTPException(status_code=401, detail="Invalid Device Token")
+
+    device.last_seen = datetime.utcnow()
+    db.commit()
+    return {"status": "ok", "device_id": device_id, "is_online": True, "last_seen": device.last_seen}
 
 @router.post("/", response_model=schemas.DeviceResponse)
 def create_device(device: schemas.DeviceBase, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):

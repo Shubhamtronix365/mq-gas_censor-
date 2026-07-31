@@ -31,6 +31,8 @@ def create_ldr_reading(
     if device.device_token != device_token:
         raise HTTPException(status_code=401, detail="Invalid Device Token")
 
+    device.last_seen = datetime.utcnow()
+
     db_reading = LDRReading(
         device_id=device_id,
         digital_value=reading.digital_value,

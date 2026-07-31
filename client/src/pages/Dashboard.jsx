@@ -19,9 +19,10 @@ const Dashboard = () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/`);
             const devices = response.data || [];
+            const activeCount = devices.filter(d => d.is_online).length;
             setStats({
                 total: devices.length,
-                active: devices.length
+                active: activeCount
             });
         } catch (error) {
             console.error("Error fetching stats:", error);

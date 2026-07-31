@@ -73,6 +73,10 @@ def run_auto_migrations():
                     connection.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
                 except Exception:
                     pass
+            try:
+                connection.execute(text("ALTER TABLE devices ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP"))
+            except Exception:
+                pass
             connection.commit()
     except Exception as e:
         print(f"Auto-migration exception: {e}")

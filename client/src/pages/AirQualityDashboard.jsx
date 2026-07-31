@@ -6,6 +6,8 @@ import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import UnifiedSensorCard from "../components/UnifiedSensorCard";
 
+import NodeStatusBadge from "../components/NodeStatusBadge";
+
 const AirQualityDashboard = ({ id, device }) => {
     const [readings, setReadings] = useState([]);
     const [latest, setLatest] = useState(null);
@@ -121,8 +123,9 @@ const AirQualityDashboard = ({ id, device }) => {
                         </span>
                         <span className={clsx("w-2 h-2 rounded-full animate-pulse", loading ? "bg-yellow-500" : "bg-emerald-500")}></span>
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight mb-1">
+                    <h1 className="text-4xl font-bold text-white tracking-tight mb-1 flex items-center gap-3 flex-wrap">
                         {id}
+                        <NodeStatusBadge device={device} />
                     </h1>
                     <p className="text-slate-400 text-sm font-medium">
                         Environmental Intelligence & Multi-Gas Monitoring System

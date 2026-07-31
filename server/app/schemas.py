@@ -71,6 +71,8 @@ class DeviceCreate(DeviceBase):
 class DeviceResponse(DeviceBase):
     device_token: str
     created_at: datetime
+    last_seen: Optional[datetime] = None
+    is_online: bool = False
     class Config:
         from_attributes = True
 

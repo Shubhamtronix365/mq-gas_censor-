@@ -3,6 +3,7 @@ import axios from "axios";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Activity, Key, Copy, Check, Zap, ArrowUpRight, ShieldAlert, Cpu } from "lucide-react";
 import { motion } from "framer-motion";
+import NodeStatusBadge from "../components/NodeStatusBadge";
 import { clsx } from "clsx";
 
 const EnergyMeterDashboard = ({ id, device }) => {
@@ -170,10 +171,11 @@ const EnergyMeterDashboard = ({ id, device }) => {
             {/* Header Section */}
             <motion.div variants={{ hidden: { opacity: 0, y: -20 }, show: { opacity: 1, y: 0 } }} className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight flex-wrap">
                         {id}
+                        <NodeStatusBadge device={device} />
                         <span className="text-xs px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                            ENERGY METER ACTIVE
+                            ENERGY METER
                         </span>
                     </h1>
                     <p className="text-slate-400 mt-1 font-medium flex items-center gap-2">

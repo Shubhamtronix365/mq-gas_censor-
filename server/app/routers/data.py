@@ -49,8 +49,9 @@ def ingest_data(
     if device.device_token != device_token:
         raise HTTPException(status_code=401, detail="Invalid Device Token")
 
-    status_val = calculate_status(data.gas, data.temperature, data.distance, data.iaq)
-
+    from datetime import datetime
+    device.last_seen = datetime.utcnow()
+    
     new_reading = models.SensorData(
         device_id=data.device_id,
         gas=data.gas,

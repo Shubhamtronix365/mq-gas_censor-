@@ -26,6 +26,13 @@ def migrate():
         except Exception as e:
             print(f"Error adding 'device_type': {e}")
 
+        print("Adding 'last_seen' column to devices table...")
+        try:
+            connection.execute(text("ALTER TABLE devices ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP"))
+            print("Successfully added 'last_seen'.")
+        except Exception as e:
+            print(f"Error adding 'last_seen': {e}")
+
         # New Air Quality columns in sensor_data table
         columns_to_add = [
             ("co2", "DOUBLE PRECISION"),

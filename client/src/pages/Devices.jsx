@@ -4,6 +4,7 @@ import { Plus, Server, Activity, AlertTriangle, Trash2, ChevronDown, Zap, Lock, 
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import NodeStatusBadge from "../components/NodeStatusBadge";
 
 // Mirror of backend PLAN_DEVICE_LIMITS — kept in sync
 const PLAN_DEVICE_LIMITS = {
@@ -227,13 +228,7 @@ const Devices = () => {
                                         <Server size={24} className="text-violet-200 group-hover:text-violet-400" />
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-                                            <span className="relative flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                            </span>
-                                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Online</span>
-                                        </div>
+                                        <NodeStatusBadge device={device} />
                                         <button
                                             onClick={(e) => handleDeleteClick(e, device.device_id)}
                                             className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"

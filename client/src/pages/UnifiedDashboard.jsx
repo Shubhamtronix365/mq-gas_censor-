@@ -5,6 +5,7 @@ import { Thermometer, Droplets, Wind, Activity, Sun, Zap, Power, Plus, Key, Copy
 import AutoBulb from "../components/AutoBulb";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
+import NodeStatusBadge from "../components/NodeStatusBadge";
 import { useAuth } from "../context/AuthContext";
 import UnifiedSensorCard from "../components/UnifiedSensorCard";
 
@@ -178,8 +179,9 @@ const UnifiedDashboard = ({ id, device }) => {
                         </span>
                         <span className={clsx("w-2 h-2 rounded-full animate-pulse", loading ? "bg-yellow-500" : "bg-emerald-500")}></span>
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight mb-1">
+                    <h1 className="text-4xl font-bold text-white tracking-tight mb-1 flex items-center gap-3 flex-wrap">
                         {id}
+                        <NodeStatusBadge device={device} />
                     </h1>
                     <p className="text-slate-400 text-sm font-medium">
                         Dual-Sensor Telemetry & Integrated Control System

@@ -6,6 +6,7 @@ import * as LucideIcons from "lucide-react";
 import { clsx } from 'clsx';
 import { useAuth } from "../context/AuthContext";
 import IconPickerSidebar from "../components/IconPickerSidebar";
+import NodeStatusBadge from "../components/NodeStatusBadge";
 import { motion } from "framer-motion";
 
 const GasDashboard = ({ id, device }) => {
@@ -198,8 +199,9 @@ const GasDashboard = ({ id, device }) => {
             {/* Header Section */}
             <motion.div variants={{ hidden: { opacity: 0, y: -20 }, show: { opacity: 1, y: 0 } }} className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight flex-wrap">
                         {id}
+                        <NodeStatusBadge device={device} />
                         {latest && (
                             <span className={clsx("text-xs px-3 py-1 rounded-full border font-bold shadow-[0_0_15px_rgba(0,0,0,0.3)]", getStatusColor(latest.status))}>
                                 {latest.status}
