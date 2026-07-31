@@ -17,6 +17,17 @@ const LDRDashboard = ({ id, device }) => {
     const [newOutputPin, setNewOutputPin] = useState("");
     const [isScreenOn, setIsScreenOn] = useState(true);
     const [timeRange, setTimeRange] = useState("24h");
+    const [activeScreenMode, setActiveScreenMode] = useState(0);
+
+    const handlePrevScreen = () => {
+        if (!isScreenOn) return;
+        setActiveScreenMode(prev => (prev === 0 ? 3 : prev - 1));
+    };
+
+    const handleNextScreen = () => {
+        if (!isScreenOn) return;
+        setActiveScreenMode(prev => (prev === 3 ? 0 : prev + 1));
+    };
 
     useEffect(() => {
         fetchReadings();
@@ -250,44 +261,120 @@ const LDRDashboard = ({ id, device }) => {
                             <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.06] rounded-2xl"></div>
 
                             {!isScreenOn ? (
-                                <div className="flex-1 flex items-center justify-center text-slate-800 font-mono text-xs tracking-widest uppercase">
-                                    CONTROLLER STANDBY
+                                <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-800 font-mono text-xs tracking-widest uppercase">
+                                    <Power size={24} className="text-slate-800 animate-pulse" />
+                                    <span>CONTROLLER STANDBY</span>
                                 </div>
                             ) : (
                                 <>
-                                    {/* Screen Header */}
-                                    <div className="text-center border-b border-white/5 pb-2.5">
+                                    {/* Screen Header with Mode Title */}
+                                    <div className="text-center border-b border-white/5 pb-2">
                                         <div className="text-xs font-black text-slate-300 tracking-[0.25em] uppercase">TRONIX<span className="text-yellow-400">365</span></div>
-                                        <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-0.5">SMART LIGHT CONTROLLER</div>
+                                        <div className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-0.5">
+                                            {activeScreenMode === 0 ? "SMART LIGHT CONTROLLER" :
+                                             activeScreenMode === 1 ? "ANALOG INTENSITY FOCUS" :
+                                             activeScreenMode === 2 ? "DIGITAL SENSING MODE" : "CONFIGURED OUTPUTS"}
+                                        </div>
                                     </div>
 
-                                    {/* Center Display Area */}
-                                    <div className="flex flex-col items-center justify-center py-4 gap-2.5">
-                                        {/* Bulb Circle Icon */}
-                                        <div className="relative w-20 h-20 rounded-full border border-yellow-500/40 bg-yellow-500/10 flex items-center justify-center shadow-[0_0_25px_rgba(234,179,8,0.25)] group">
-                                            <Lightbulb size={34} className="text-yellow-400 stroke-[2] drop-shadow-[0_0_10px_rgba(234,179,8,0.8)] transition-transform group-hover:scale-110 duration-300" />
-                                        </div>
-
-                                        {/* Analog Intensity Value */}
-                                        <div className="text-center mt-0.5">
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ANALOG INTENSITY</div>
-                                            <div className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none">
-                                                {latest?.analog_value ?? "--"} <span className="text-xs font-semibold text-slate-500">/ 4095</span>
+                                    {/* Center Display Area - Dynamic per activeScreenMode */}
+                                    {activeScreenMode === 0 && (
+                                        /* Mode 0: Overview (Default) */
+                                        <div className="flex flex-col items-center justify-center py-3 gap-2">
+                                            <div className="relative w-16 h-16 rounded-full border border-yellow-500/40 bg-yellow-500/10 flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.25)] group">
+                                                <Lightbulb size={28} className="text-yellow-400 stroke-[2] drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] transition-transform group-hover:scale-110 duration-300" />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ANALOG INTENSITY</div>
+                                                <div className="text-2xl font-black text-white tracking-tight leading-none">
+                                                    {latest?.analog_value ?? "--"} <span className="text-xs font-semibold text-slate-500">/ 4095</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-center w-full">
+                                                <div className={clsx(
+                                                    "w-full py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider border transition-all shadow-inner",
+                                                    latest?.digital_value
+                                                        ? "bg-blue-500/20 border-blue-500/40 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+                                                        : "bg-slate-900/90 border-white/5 text-slate-400"
+                                                )}>
+                                                    DIGITAL: {latest?.digital_value ? "ACTIVE (1)" : "INACTIVE (0)"}
+                                                </div>
                                             </div>
                                         </div>
+                                    )}
 
-                                        {/* Digital Status Pill */}
-                                        <div className="text-center mt-1.5 w-full">
-                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">DIGITAL STATUS</div>
+                                    {activeScreenMode === 1 && (
+                                        /* Mode 1: Analog Intensity Focus */
+                                        <div className="flex flex-col items-center justify-center py-3 gap-2.5">
+                                            <div className="p-3 bg-yellow-500/20 text-yellow-400 rounded-2xl border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                                                <Sun size={32} className="animate-spin-slow" />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">LIGHT INTENSITY</div>
+                                                <div className="text-3xl font-black text-yellow-400 tracking-tight leading-none">
+                                                    {latest?.analog_value ?? "--"}
+                                                </div>
+                                                <div className="text-[10px] text-slate-500 font-semibold mt-1">{intensityPct}% Capacity</div>
+                                            </div>
+                                            <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-white/10">
+                                                <div className="bg-gradient-to-r from-yellow-500 to-amber-400 h-full rounded-full transition-all duration-500" style={{ width: `${intensityPct}%` }}></div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {activeScreenMode === 2 && (
+                                        /* Mode 2: Digital Sensing Focus */
+                                        <div className="flex flex-col items-center justify-center py-3 gap-2.5">
                                             <div className={clsx(
-                                                "w-full py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider border transition-all shadow-inner",
-                                                latest?.digital_value
-                                                    ? "bg-blue-500/20 border-blue-500/40 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                                                    : "bg-slate-900/90 border-white/5 text-slate-400"
+                                                "p-3 rounded-2xl border transition-all",
+                                                latest?.digital_value 
+                                                    ? "bg-blue-500/20 border-blue-500/40 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                                                    : "bg-slate-800/40 border-white/10 text-slate-500"
                                             )}>
-                                                {latest?.digital_value ? "ACTIVE (1)" : "INACTIVE (0)"}
+                                                <Zap size={32} />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">DIGITAL SIGNAL</div>
+                                                <div className={clsx("text-2xl font-black tracking-tight", latest?.digital_value ? "text-blue-400" : "text-slate-400")}>
+                                                    {latest?.digital_value ? "ACTIVE (1)" : "INACTIVE (0)"}
+                                                </div>
+                                                <div className="text-[10px] text-slate-500 font-semibold mt-1">
+                                                    {latest?.digital_value ? "Threshold Exceeded" : "Below Threshold"}
+                                                </div>
                                             </div>
                                         </div>
+                                    )}
+
+                                    {activeScreenMode === 3 && (
+                                        /* Mode 3: Manual Outputs Focus */
+                                        <div className="flex flex-col items-center justify-center py-3 gap-2">
+                                            <div className="p-3 bg-purple-500/20 text-purple-400 rounded-2xl border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                                <Sliders size={28} />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">ACTIVE OUTPUTS</div>
+                                                <div className="text-2xl font-black text-purple-400 tracking-tight leading-none">
+                                                    {activeLightsCount} / {outputs.length}
+                                                </div>
+                                            </div>
+                                            <div className="w-full text-center text-[10px] text-slate-400 font-medium truncate">
+                                                {outputs.length > 0 ? outputs.map(o => `${o.output_name}: ${o.is_active ? 'ON' : 'OFF'}`).join(' • ') : "No outputs configured"}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* LCD Bottom Page Indicator Dots */}
+                                    <div className="flex justify-center items-center gap-1.5 pt-1 border-t border-white/5">
+                                        {[0, 1, 2, 3].map(modeIdx => (
+                                            <div
+                                                key={modeIdx}
+                                                onClick={() => setActiveScreenMode(modeIdx)}
+                                                className={clsx(
+                                                    "w-1.5 h-1.5 rounded-full transition-all cursor-pointer",
+                                                    activeScreenMode === modeIdx ? "bg-yellow-400 w-3 shadow-[0_0_6px_#f59e0b]" : "bg-slate-700 hover:bg-slate-500"
+                                                )}
+                                            />
+                                        ))}
                                     </div>
                                 </>
                             )}
@@ -296,12 +383,13 @@ const LDRDashboard = ({ id, device }) => {
                         {/* Bezel Controls */}
                         <div className="flex justify-center items-center gap-5 mt-0.5">
                             <button 
-                                onClick={() => setIsScreenOn(prev => !prev)}
+                                onClick={handlePrevScreen}
+                                disabled={!isScreenOn}
                                 className={clsx(
                                     "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4)] active:scale-95",
-                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white cursor-pointer" : "bg-slate-900 text-slate-600"
+                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white cursor-pointer" : "bg-slate-900 text-slate-700 cursor-not-allowed opacity-50"
                                 )}
-                                title="Previous"
+                                title="Previous Screen Mode"
                             >
                                 <ChevronLeft size={16} />
                             </button>
@@ -318,12 +406,13 @@ const LDRDashboard = ({ id, device }) => {
                             </button>
 
                             <button 
-                                onClick={() => setIsScreenOn(prev => !prev)}
+                                onClick={handleNextScreen}
+                                disabled={!isScreenOn}
                                 className={clsx(
                                     "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4)] active:scale-95",
-                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white cursor-pointer" : "bg-slate-900 text-slate-600"
+                                    isScreenOn ? "bg-slate-800 text-slate-300 hover:text-white cursor-pointer" : "bg-slate-900 text-slate-700 cursor-not-allowed opacity-50"
                                 )}
-                                title="Next"
+                                title="Next Screen Mode"
                             >
                                 <ChevronRight size={16} />
                             </button>
