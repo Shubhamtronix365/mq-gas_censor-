@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Thermometer, Droplets, Wind, Activity, Key, Copy, Check, Edit3, ArrowUpRight } from "lucide-react";
+import { Thermometer, Droplets, Wind, Activity, Key, Copy, Check, Edit3, ArrowUpRight, Cloud, Target, Power, ChevronLeft, ChevronRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { clsx } from 'clsx';
 import { useAuth } from "../context/AuthContext";
 import IconPickerSidebar from "../components/IconPickerSidebar";
 import { motion } from "framer-motion";
-import GasSensorCard from "../components/GasSensorCard";
 
 const GasDashboard = ({ id, device }) => {
     const [readings, setReadings] = useState([]);
@@ -19,6 +18,8 @@ const GasDashboard = ({ id, device }) => {
     const { user, updateUser } = useAuth();
     const [pickerOpen, setPickerOpen] = useState(false);
     const [activeSensor, setActiveSensor] = useState(null);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [isScreenOn, setIsScreenOn] = useState(true);
 
     useEffect(() => {
         fetchData();
@@ -132,6 +133,61 @@ const GasDashboard = ({ id, device }) => {
         }
     };
 
+    const metrics = [
+        {
+            key: 'gas',
+            sensorType: 'Gas',
+            title: 'Gas Level',
+            value: latest?.gas ? Number(latest.gas).toFixed(0) : null,
+            unit: 'PPM',
+            icon: getSensorIcon('Gas', Cloud),
+            color: 'text-sky-400',
+            borderColor: 'border-sky-500/40',
+            bgGlow: 'shadow-[0_0_25px_rgba(14,165,233,0.3)]',
+            iconColor: 'text-sky-400 bg-sky-500/10',
+            glowColor: 'rgba(14, 165, 233, 0.4)',
+        },
+        {
+            key: 'temperature',
+            sensorType: 'Temperature',
+            title: 'Temperature',
+            value: latest?.temperature ? Number(latest.temperature).toFixed(1) : null,
+            unit: '°C',
+            icon: getSensorIcon('Temperature', Thermometer),
+            color: 'text-fuchsia-400',
+            borderColor: 'border-fuchsia-500/40',
+            bgGlow: 'shadow-[0_0_25px_rgba(217,70,239,0.3)]',
+            iconColor: 'text-fuchsia-400 bg-fuchsia-500/10',
+            glowColor: 'rgba(217, 70, 239, 0.4)',
+        },
+        {
+            key: 'humidity',
+            sensorType: 'Humidity',
+            title: 'Humidity',
+            value: latest?.humidity ? Number(latest.humidity).toFixed(1) : null,
+            unit: '%',
+            icon: getSensorIcon('Humidity', Droplets),
+            color: 'text-blue-400',
+            borderColor: 'border-blue-500/40',
+            bgGlow: 'shadow-[0_0_25px_rgba(59,130,246,0.3)]',
+            iconColor: 'text-blue-400 bg-blue-500/10',
+            glowColor: 'rgba(59, 130, 246, 0.4)',
+        },
+        {
+            key: 'distance',
+            sensorType: 'Distance',
+            title: 'Distance',
+            value: latest?.distance ? Number(latest.distance).toFixed(1) : null,
+            unit: 'cm',
+            icon: getSensorIcon('Distance', Target),
+            color: 'text-emerald-400',
+            borderColor: 'border-emerald-500/40',
+            bgGlow: 'shadow-[0_0_25px_rgba(16,185,129,0.3)]',
+            iconColor: 'text-emerald-400 bg-emerald-500/10',
+            glowColor: 'rgba(16, 185, 129, 0.4)',
+        }
+    ];
+
     return (
         <motion.div
             variants={container}
@@ -181,44 +237,222 @@ const GasDashboard = ({ id, device }) => {
                 </div>
             </motion.div>
 
-            {/* Sensor Grid */}
-            <motion.div variants={container} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <GasSensorCard
-                    title="Gas Level"
-                    value={latest?.gas ? Number(latest.gas).toFixed(0) : null}
-                    unit="ppm"
-                    Icon={getSensorIcon('Gas', Wind)}
-                    onClick={() => handleSensorClick('Gas')}
-                    accentColor="violet"
-                    colorClass="bg-violet-500/20 text-violet-400 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
-                />
-                <GasSensorCard
-                    title="Temperature"
-                    value={latest?.temperature ? Number(latest.temperature).toFixed(1) : null}
-                    unit="°C"
-                    Icon={getSensorIcon('Temperature', Thermometer)}
-                    onClick={() => handleSensorClick('Temperature')}
-                    accentColor="orange"
-                    colorClass="bg-orange-500/20 text-orange-400 shadow-[0_0_20px_rgba(251,146,60,0.15)]"
-                />
-                <GasSensorCard
-                    title="Humidity"
-                    value={latest?.humidity ? Number(latest.humidity).toFixed(1) : null}
-                    unit="%"
-                    Icon={getSensorIcon('Humidity', Droplets)}
-                    onClick={() => handleSensorClick('Humidity')}
-                    accentColor="blue"
-                    colorClass="bg-blue-500/20 text-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.15)]"
-                />
-                <GasSensorCard
-                    title="Distance"
-                    value={latest?.distance ? Number(latest.distance).toFixed(1) : null}
-                    unit="cm"
-                    Icon={getSensorIcon('Distance', Activity)}
-                    onClick={() => handleSensorClick('Distance')}
-                    accentColor="emerald"
-                    colorClass="bg-emerald-500/20 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
-                />
+            {/* Custom Rugged Sensor Unit Console */}
+            <motion.div 
+                variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }} 
+                className="relative mx-auto max-w-xl w-full bg-gradient-to-b from-[#2a2e35] to-[#181a1e] border-4 border-[#3a3f47] rounded-[2.5rem] p-6 md:p-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8),_inset_0_2px_4px_rgba(255,255,255,0.1),_inset_0_-2px_4px_rgba(0,0,0,0.4)] flex flex-col gap-6 select-none"
+            >
+                {/* Top-Left Hex Screw */}
+                <div className="absolute top-4 left-4 w-7 h-7 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                    <div className="w-3.5 h-3.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#2a2d33]"></div>
+                    </div>
+                </div>
+                {/* Top-Right Hex Screw */}
+                <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                    <div className="w-3.5 h-3.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#2a2d33]"></div>
+                    </div>
+                </div>
+                {/* Bottom-Left Hex Screw */}
+                <div className="absolute bottom-4 left-4 w-7 h-7 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                    <div className="w-3.5 h-3.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#2a2d33]"></div>
+                    </div>
+                </div>
+                {/* Bottom-Right Hex Screw */}
+                <div className="absolute bottom-4 right-4 w-7 h-7 rounded-full bg-gradient-to-br from-[#121315] to-[#2d3139] border border-slate-800 flex items-center justify-center shadow-inner">
+                    <div className="w-3.5 h-3.5 rounded-full bg-[#1c1d21] border border-[#0d0e10] flex items-center justify-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#2a2d33]"></div>
+                    </div>
+                </div>
+
+                {/* Top Status LED Bar */}
+                <div className="flex justify-center w-full mt-2 mb-1">
+                    <div className={clsx(
+                        "w-32 h-2.5 rounded-full bg-slate-950 border border-slate-900 transition-all duration-500",
+                        !isScreenOn 
+                            ? "bg-slate-800 shadow-none" 
+                            : latest?.status === "DANGER"
+                                ? "bg-[#ef4444] shadow-[0_0_15px_#ef4444,0_0_5px_#ef4444]"
+                                : latest?.status === "WARNING"
+                                    ? "bg-[#f59e0b] shadow-[0_0_15px_#f59e0b,0_0_5px_#f59e0b]"
+                                    : "bg-[#10b981] shadow-[0_0_15px_#10b981,0_0_5px_#10b981]"
+                    )}></div>
+                </div>
+
+                {/* LCD Recessed Screen */}
+                <div className="relative overflow-hidden bg-[#080a11] rounded-2xl border-2 border-[#16191f] shadow-[inset_0_4px_10px_rgba(0,0,0,0.9)] p-6 min-h-[260px] flex flex-col justify-between transition-all duration-300">
+                    {/* Subtle CRT screen scanlines pattern */}
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_50%,rgba(0,0,0,1)_50%)] bg-[size:100%_4px]"></div>
+                    
+                    {/* Screen Glass Reflection overlay */}
+                    <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.06] rounded-2xl"></div>
+
+                    {!isScreenOn ? (
+                        /* Powered-off screen state */
+                        <div className="flex-1 flex items-center justify-center text-slate-800 font-mono text-sm tracking-widest uppercase">
+                            SYSTEM STANDBY
+                        </div>
+                    ) : (
+                        /* Powered-on active display */
+                        <>
+                            {/* Header */}
+                            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                                <div>
+                                    <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">GAS SENSOR UNIT</div>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className={clsx(
+                                        "w-1.5 h-1.5 rounded-full animate-pulse",
+                                        latest ? "bg-emerald-500" : "bg-slate-500"
+                                    )}></span>
+                                    <span className={clsx(
+                                        "text-[10px] font-bold uppercase tracking-wider",
+                                        latest ? "text-emerald-400" : "text-slate-400"
+                                    )}>
+                                        {latest ? "ONLINE" : "STANDBY"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Main Content Area */}
+                            <div className="flex items-center justify-between py-6 gap-6">
+                                {/* Left: Active Icon in Circle */}
+                                <div 
+                                    onClick={() => handleSensorClick(metrics[activeIndex].sensorType)}
+                                    className={clsx(
+                                        "relative w-24 h-24 rounded-full border flex items-center justify-center cursor-pointer transition-all duration-300 group hover:scale-105",
+                                        metrics[activeIndex].borderColor,
+                                        metrics[activeIndex].bgGlow
+                                    )}
+                                >
+                                    {/* Edit Icon Hover overlay */}
+                                    <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                        <Edit3 size={16} />
+                                    </div>
+                                    <div className={clsx("p-4 rounded-full transition-transform duration-300", metrics[activeIndex].iconColor)}>
+                                        {(() => {
+                                            const IconComponent = metrics[activeIndex].icon;
+                                            return <IconComponent size={32} className="stroke-[2]" />;
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Right: Text Information */}
+                                <div className="flex-1 flex flex-col justify-center min-w-0">
+                                    <div className={clsx("text-xs font-bold uppercase tracking-widest mb-1.5", metrics[activeIndex].color)}>
+                                        {metrics[activeIndex].title}
+                                    </div>
+                                    <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight flex items-baseline gap-1.5 leading-none">
+                                        {metrics[activeIndex].value ?? "--"}
+                                        <span className="text-lg text-slate-400 font-semibold">{metrics[activeIndex].unit}</span>
+                                    </div>
+                                    <div className="mt-2.5 flex items-center gap-1.5">
+                                        <span className={clsx(
+                                            "text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider bg-white/5 border border-white/5",
+                                            latest?.status === "DANGER"
+                                                ? "text-red-400 border-red-500/20"
+                                                : latest?.status === "WARNING"
+                                                    ? "text-yellow-400 border-yellow-500/20"
+                                                    : "text-emerald-400 border-emerald-500/20"
+                                        )}>
+                                            {latest?.status === "DANGER" 
+                                                ? "Critical" 
+                                                : latest?.status === "WARNING" 
+                                                    ? "Warning" 
+                                                    : "Normal"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Secondary Inactive Metrics Row */}
+                            <div className="border-t border-white/5 pt-3.5 flex justify-between items-center">
+                                {metrics.map((m, idx) => {
+                                    // Skip the active index in the horizontal list
+                                    if (idx === activeIndex) return null;
+                                    const SmallIcon = m.icon;
+                                    return (
+                                        <div 
+                                            key={m.key} 
+                                            onClick={() => setActiveIndex(idx)}
+                                            className="flex items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity px-2.5 py-1 rounded-lg hover:bg-white/5"
+                                        >
+                                            <span className={clsx("p-1.5 rounded-md", m.iconColor)}>
+                                                <SmallIcon size={14} className="stroke-[2.5]" />
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-300">
+                                                {m.value ?? "--"}
+                                                <span className="text-[10px] text-slate-500 font-medium ml-0.5">{m.unit}</span>
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Bezel Controls */}
+                <div className="flex flex-col items-center gap-3">
+                    <div className="flex justify-center items-center gap-8 mt-2">
+                        {/* Left Button */}
+                        <button 
+                            onClick={() => {
+                                if (isScreenOn) {
+                                    setActiveIndex((prev) => (prev - 1 + 4) % 4);
+                                }
+                            }}
+                            disabled={!isScreenOn}
+                            className={clsx(
+                                "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 select-none outline-none border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.1)] active:scale-95",
+                                isScreenOn
+                                    ? "bg-gradient-to-b from-[#2d3139] to-[#1a1c20] hover:from-[#353a43] hover:to-[#22252a] text-slate-400 hover:text-white cursor-pointer"
+                                    : "bg-gradient-to-b from-[#22252e] to-[#15171a] text-slate-700 opacity-50 cursor-not-allowed"
+                            )}
+                            title="Previous View"
+                        >
+                            <ChevronLeft size={20} className="stroke-[2.5]" />
+                        </button>
+
+                        {/* Central Power Button */}
+                        <button 
+                            onClick={() => setIsScreenOn((prev) => !prev)}
+                            className="w-14 h-14 rounded-full bg-gradient-to-b from-[#2d3139] to-[#1a1c20] hover:from-[#353a43] hover:to-[#22252a] border border-slate-700/60 shadow-[0_4px_8px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center active:scale-95 transition-all cursor-pointer group"
+                            title={isScreenOn ? "Power Off" : "Power On"}
+                        >
+                            <Power size={22} className={clsx(
+                                "transition-all duration-300 stroke-[2.5]",
+                                isScreenOn 
+                                    ? "text-[#3b82f6] drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" 
+                                    : "text-slate-500 hover:text-slate-400"
+                            )} />
+                        </button>
+
+                        {/* Right Button */}
+                        <button 
+                            onClick={() => {
+                                if (isScreenOn) {
+                                    setActiveIndex((prev) => (prev + 1) % 4);
+                                }
+                            }}
+                            disabled={!isScreenOn}
+                            className={clsx(
+                                "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 select-none outline-none border border-slate-700/60 shadow-[0_4px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.1)] active:scale-95",
+                                isScreenOn
+                                    ? "bg-gradient-to-b from-[#2d3139] to-[#1a1c20] hover:from-[#353a43] hover:to-[#22252a] text-slate-400 hover:text-white cursor-pointer"
+                                    : "bg-gradient-to-b from-[#22252e] to-[#15171a] text-slate-700 opacity-50 cursor-not-allowed"
+                            )}
+                            title="Next View"
+                        >
+                            <ChevronRight size={20} className="stroke-[2.5]" />
+                        </button>
+                    </div>
+                    <div className="text-[9px] md:text-[10px] text-slate-500 font-extrabold uppercase tracking-widest text-center mt-1">
+                        PRESS LEFT / RIGHT TO SWITCH VIEW
+                    </div>
+                </div>
             </motion.div>
 
             <IconPickerSidebar
