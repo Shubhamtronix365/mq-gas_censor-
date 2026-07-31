@@ -124,8 +124,8 @@ default_origins = [
 # Combine and deduplicate origins without trailing slashes
 origins = list(set(default_origins + custom_origins))
 
-# Regex matching local dev ports and production deployment domains
-origin_regex = r"https?://(localhost|127\.0\.0\.1|.*\.pages\.dev|.*\.onrender\.com|indianiiot\.com|www\.indianiiot\.com)(:\d+)?"
+# Regex matching all HTTP/HTTPS development and production origins
+origin_regex = r"https?://.*"
 
 app.add_middleware(
     CORSMiddleware,
