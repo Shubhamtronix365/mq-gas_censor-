@@ -1,0 +1,610 @@
+================================================================================
+                    INDIANIIOT PLATFORM DOCUMENTATION
+    COMPLETE COMPREHENSIVE GUIDE TO ALL FRONTEND PAGES & BACKEND ROUTES
+================================================================================
+Project Name : Indianiiot (by TRONIX365)
+Architecture : Full-Stack IoT Telemetry & Industrial SaaS Monitoring Platform
+Frontend     : React (Vite), React Router v6, TailwindCSS, Framer Motion, Recharts
+Backend      : FastAPI (Python 3.11+), SQLAlchemy ORM, SQLite / PostgreSQL
+Auth & Security: JWT Bearer Tokens, Bcrypt Hashing, Google OAuth SSO, Rate Limiting
+Payment      : PayU Payment Gateway Integration (SHA-512 Hash Security)
+Email Service: Brevo Transactional Email API (SMTP / REST API)
+================================================================================
+
+TABLE OF CONTENTS:
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW & ARCHITECTURE
+2. SYSTEM ROUTING & ACCESS CONTROL MAP
+3. DETAILED FRONTEND PAGE-BY-PAGE DOCUMENTATION
+   - Page 1: Login Page (/login)
+   - Page 2: Register / Sign-Up Page (/register, /signup)
+   - Page 3: Mission Control Dashboard (/)
+   - Page 4: Devices Management Console (/devices)
+   - Page 5: Dynamic Device Detail Router (/devices/:id)
+     * Sub-Dashboard 5A: Gas Sensor Node Dashboard (GasDashboard)
+     * Sub-Dashboard 5B: LDR Light Sensor Node Dashboard (LDRDashboard)
+     * Sub-Dashboard 5C: Fusion Multi-Sensor Dashboard (UnifiedDashboard)
+     * Sub-Dashboard 5D: Air Quality Monitoring Dashboard (AirQualityDashboard)
+     * Sub-Dashboard 5E: Industrial Energy Meter Dashboard (EnergyMeterDashboard)
+   - Page 6: User Profile & Security Settings (/profile)
+   - Page 7: Plans & Subscription Checkout (/subscription)
+   - Page 8: Payment Success Landing (/payment/success)
+   - Page 9: Payment Failure Landing (/payment/failure)
+4. DETAILED BACKEND ROUTER & API ENDPOINTS CATALOG
+   - Authentication Router (/api/v1/auth)
+   - Device Management Router (/api/v1/devices)
+   - Data Ingestion & Reading Router (/api/v1/data)
+   - LDR & GPIO Actuator Router (/api/v1/ldr)
+   - Payment Gateway Router (/api/v1/payment)
+   - User Profile & Subscription Router (/api/v1/users)
+   - Background Jobs & Scheduler (/api/v1/jobs)
+5. DATABASE SCHEMA & DATA MODELS INTERACTION
+6. SECURITY, RATE LIMITING & ERROR HANDLING
+
+================================================================================
+1. PROJECT OVERVIEW & ARCHITECTURE
+================================================================================
+Indianiiot is an enterprise-grade Industrial IoT (IIoT) SaaS platform engineered 
+to monitor, control, and visualize real-time hardware telemetry from microcontrollers 
+(such as ESP32, ESP8266, Arduino, STM32, and Raspberry Pi) across diverse 
+industrial domains (Gas Detection, Ambient Light & Actuation, Indoor Air Quality, 
+and Schneider Electric Energy Metering).
+
+Platform Key Technical Features:
+- Real-Time Hardware Telemetry: Ingests sensor data at sub-second to 5s intervals.
+- Plan-Based Device Quota Enforcement: Free (2 nodes), Starter (5 nodes), 
+  Professional (15 nodes), Enterprise (100+ nodes).
+- Automated Edge Actuation: Bidirectional GPIO control for microcontrollers to toggle 
+  relays and smart bulbs dynamically based on sensor thresholds or user clicks.
+- PayU Gateway Integration: Production-grade checkout with server-side SHA-512 
+  hash calculation and verification.
+- Automated Subscription Expiry Alerts: Daily cron background job (APScheduler) 
+  checking expiring subscriptions and sending email notices via Brevo.
+- Interactive Hardware Simulators: In-browser LCD screen simulation for LDR nodes, 
+  MQ Gas nodes, and Schneider EM6400-series 3-phase digital energy meters.
+
+================================================================================
+2. SYSTEM ROUTING & ACCESS CONTROL MAP
+================================================================================
+
++-----------------------+-----------------------------+-------------------+-----------------------------------+
+| Route Path            | Frontend Component / Page   | Access Level      | Layout / Wrapper                  |
++-----------------------+-----------------------------+-------------------+-----------------------------------+
+| /login                | Login.jsx                   | Public            | None (Standalone Page)            |
+| /register             | Register.jsx                | Public            | None (Standalone Page)            |
+| /signup               | Register.jsx                | Public            | None (Standalone Page)            |
+| /                     | Dashboard.jsx               | Protected (JWT)   | DashboardLayout (Sidebar & Topbar)|
+| /devices              | Devices.jsx                 | Protected (JWT)   | DashboardLayout                   |
+| /devices/:id          | DeviceDetail.jsx            | Protected (JWT)   | DashboardLayout                   |
+| /profile              | Profile.jsx                 | Protected (JWT)   | DashboardLayout                   |
+| /subscription         | Subscription.jsx            | Protected (JWT)   | DashboardLayout                   |
+| /payment/success      | PaymentSuccess.jsx          | Protected (JWT)   | Standalone Glassmorphic Container |
+| /payment/failure      | PaymentFailure.jsx          | Protected (JWT)   | Standalone Glassmorphic Container |
+| *                     | Navigate to "/"             | Wildcard Redir    | None                              |
++-----------------------+-----------------------------+-------------------+-----------------------------------+
+
+================================================================================
+3. DETAILED FRONTEND PAGE-BY-PAGE DOCUMENTATION
+================================================================================
+
+--------------------------------------------------------------------------------
+PAGE 1: LOGIN PAGE
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/Login.jsx
+- URL Route      : /login
+- Access Control : Public (Unauthenticated users)
+- Purpose        : User login via email/password credentials or Google SSO.
+
+- Functionality & How It Works:
+  1. UI Design: Neo-glassmorphic login card over a dark ambient backdrop featuring 
+     custom input fields for Email Address and Password with interactive show/hide 
+     password visibility toggle.
+  2. Form Submission: Collects credentials and calls the `login(email, password)` 
+     method provided by `AuthContext.jsx`. Sends HTTP POST request to backend route 
+     `/api/v1/auth/login`. Upon success, stores JWT bearer token in localStorage/
+     sessionStorage and navigates to `/`.
+  3. Google OAuth Single Sign-On (SSO): Initializes Google Identity Services API 
+     (`window.google.accounts.id`) using `VITE_GOOGLE_CLIENT_ID`. Displays Google 
+     One-Tap / standard SSO prompt. Transmits Google JWT credential to backend endpoint 
+     `/api/v1/auth/google` for verification and account setup.
+  4. Error Handling: Displays smooth animated alert banners for invalid credentials, 
+     missing fields, or server connection timeouts. Includes a rate-limiter check 
+     preventing brute-force attempts (30 requests/60s).
+
+--------------------------------------------------------------------------------
+PAGE 2: REGISTER / SIGN-UP PAGE
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/Register.jsx
+- URL Route      : /register, /signup
+- Access Control : Public (Unauthenticated users)
+- Purpose        : Registration page for creating new workspace administrator accounts.
+
+- Functionality & How It Works:
+  1. User Input Fields: Full Name, Email Address, Password, Confirm Password, and 
+     Terms of Service & Privacy Policy acceptance checkbox.
+  2. Client-Side Validation:
+     - Verifies password and confirm password match exactly.
+     - Enforces password strength regex: minimum 8 characters, at least 1 uppercase 
+       letter, 1 lowercase letter, and 1 numeric digit.
+     - Requires explicit checking of the Terms of Service checkbox.
+  3. API Submission: Calls `register(email, password, fullName)` from `AuthContext.jsx`, 
+     sending a POST request to `/api/v1/auth/register`. On successful registration:
+     - User record is created in the database with default plan 'starter'.
+     - Transactional Welcome Email is dispatched to the user via Brevo API.
+     - Redirects user to `/login` to sign in.
+  4. Social Sign-Up: Integrates 1-click Google Sign-Up using Google Identity Services.
+
+--------------------------------------------------------------------------------
+PAGE 3: MISSION CONTROL DASHBOARD
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/Dashboard.jsx
+- URL Route      : / (Home Root)
+- Access Control : Protected (Requires valid JWT Auth token)
+- Parent Layout  : DashboardLayout.jsx (Includes responsive sidebar & top header)
+
+- Purpose        : Central overview command panel providing high-level system telemetry 
+                   metrics, live connection status, quick actions, and user onboarding.
+
+- Functionality & How It Works:
+  1. Welcome Header & Onboarding: Greets user by full name ("Commander [Name]"). 
+     If the user profile lacks a full name, triggers the `OnboardingModal` component 
+     prompting the user to complete their workspace profile details.
+  2. Live Connection Indicator: Animated glowing emerald pulse badge confirming active 
+     WebSocket/HTTP connection to backend telemetry services.
+  3. Metric Stat Cards:
+     - Total Devices: Queries `GET /api/v1/devices/` to display total registered nodes.
+     - Active Nodes: Computes count of devices marked `is_online` (last seen within 15s).
+     - System Health: Displays 100% operational efficiency status indicator.
+  4. Quick Action Tiles: Interactive links directing users to Deploy Nodes (`/devices`) 
+     or exploring upcoming analytics features.
+
+--------------------------------------------------------------------------------
+PAGE 4: DEVICES MANAGEMENT CONSOLE
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/Devices.jsx
+- URL Route      : /devices
+- Access Control : Protected (Requires valid JWT Auth token)
+- Parent Layout  : DashboardLayout.jsx
+
+- Purpose        : Node deployment, device list management, subscription quota 
+                   enforcement, and hardware node termination.
+
+- Functionality & How It Works:
+  1. Plan Usage Quota Progress Bar:
+     - Fetches quota status from `/api/v1/devices/limit-info`.
+     - Maps maximum node limits: Free (2 nodes), Starter (5 nodes), Professional 
+       (15 nodes), Enterprise (100 nodes).
+     - Displays color-coded progress bar (Emerald -> Amber -> Rose when quota is filled).
+     - Locks the "Deploy Node" button and displays upgrade prompts if user reaches 
+       their plan node limit.
+  2. Device Grid & Node Status:
+     - Displays cards for all user nodes featuring hardware type badge (`GasNode`, 
+       `LightNode`, `FusionNode`, `AirQualityNode`, `Energy Meter`), device ID, and 
+       `NodeStatusBadge.jsx` (ONLINE / OFFLINE badge based on real-time heartbeat).
+  3. Deploy Node Modal:
+     - Form allowing user to specify a unique Device ID (e.g. `ESP32_ALPHA`) and select 
+       a hardware configuration type (`gas_sensor`, `ldr_sensor`, `combined_sensor`, 
+       `air_quality_monitor`, `energy_meter`).
+     - Sends POST request to `/api/v1/devices/`. Generates a unique secure `device_token` 
+       used by edge microcontrollers to authenticate telemetry requests.
+  4. Terminate Node Modal:
+     - Confirmation dialog before calling DELETE `/api/v1/devices/{device_id}` to 
+       decouple and remove the node and its historical readings from the database.
+
+--------------------------------------------------------------------------------
+PAGE 5: DYNAMIC DEVICE DETAIL ROUTER
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/DeviceDetail.jsx
+- URL Route      : /devices/:id
+- Access Control : Protected (Requires valid JWT Auth token)
+- Parent Layout  : DashboardLayout.jsx
+
+- Purpose        : Master dynamic routing component that inspects the specified device's 
+                   `device_type` and mounts the corresponding specialized dashboard page.
+
+- Branching Logic:
+  - If `device_type === 'ldr_sensor'`        -> Mounts `<LDRDashboard id={id} device={device} />`
+  - If `device_type === 'combined_sensor'`   -> Mounts `<UnifiedDashboard id={id} device={device} />`
+  - If `device_type === 'air_quality_monitor'`-> Mounts `<AirQualityDashboard id={id} device={device} />`
+  - If `device_type === 'energy_meter'`      -> Mounts `<EnergyMeterDashboard id={id} device={device} />`
+  - If `device_type === 'gas_sensor'`        -> Mounts `<GasDashboard id={id} device={device} />`
+
+--------------------------------------------------------------------------------
+SUB-DASHBOARD 5A: GAS SENSOR NODE DASHBOARD
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/GasDashboard.jsx
+- URL Route      : Rendered inside /devices/:id (when type === 'gas_sensor')
+
+- Purpose        : Real-time telemetry monitoring for MQ Gas sensors (PPM, Temperature, 
+                   Humidity, Heat Index) and sensor icon customization.
+
+- Key Features & Logic:
+  1. Real-Time Telemetry Polling: Polls `/api/v1/devices/{id}/readings?limit=20` every 5 seconds.
+  2. Real-Time Recharts AreaChart: Plots PPM gas concentration over time with smooth area fills.
+  3. Metric Cards: Gas Level (PPM), Temperature (°C/°F), Relative Humidity (%), Heat Index.
+  4. Status Badge: Evaluates status (NORMAL / WARNING / DANGER) with ambient visual highlights.
+  5. Icon Customization Sidebar: Uses `IconPickerSidebar.jsx` allowing users to click any 
+     sensor card and select custom Lucide icons, which are saved to `user.preferences` 
+     via `PUT /api/v1/users/me`.
+  6. Digital LCD Simulator: Virtual hardware screen preview with screen power toggle button.
+  7. Token Copy Utility: 1-click token copy button for copying `device_token` into firmware 
+     code (includes fallback for HTTP/non-SSL environments).
+
+--------------------------------------------------------------------------------
+SUB-DASHBOARD 5B: LDR LIGHT SENSOR NODE DASHBOARD
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/LDRDashboard.jsx
+- URL Route      : Rendered inside /devices/:id (when type === 'ldr_sensor')
+
+- Purpose        : Real-time ambient light monitoring (Analog/Lux) and remote GPIO 
+                   actuator relay control.
+
+- Key Features & Logic:
+  1. Fast Telemetry Polling: Polls LDR readings and GPIO output statuses every 1 second.
+  2. Ambient Light Trend Chart: Interactive Recharts graph plotting light intensity values.
+  3. Remote Actuator Control Grid: Lists registered GPIO output pins (relays/smart bulbs). 
+     Clicking a switch sends `PUT /api/v1/ldr/outputs/{output_id}` updating `is_active` status. 
+     Edge microcontrollers retrieve these states on their next ingestion payload to switch relays.
+  4. Add Output Modal: Allows registering new GPIO pin actuators with custom labels.
+  5. Virtual Multi-Screen LCD Display: Cycleable screen modes (Lux, Raw Analog, Relay States).
+
+--------------------------------------------------------------------------------
+SUB-DASHBOARD 5C: FUSION MULTI-SENSOR DASHBOARD
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/UnifiedDashboard.jsx
+- URL Route      : Rendered inside /devices/:id (when type === 'combined_sensor')
+
+- Purpose        : Hybrid panel combining both MQ Gas sensor metrics and LDR Light sensor 
+                   metrics into a single unified interface.
+
+- Key Features & Logic:
+  1. Dual Telemetry Polling: Polls gas readings, LDR readings, and GPIO output states 
+     concurrently using `Promise.all` every 2 seconds.
+  2. Dual-Axis Recharts Chart: Overlay plot comparing Gas PPM alongside Ambient Light levels.
+  3. Integrated Metric Cards: Gas Level, Ambient Lux, Temperature, Humidity, Heat Index.
+  4. AutoBulb Component (`AutoBulb.jsx`): Interactive 3D smart bulb graphic reflecting 
+     ambient light intensity and relay switch state.
+  5. Remote GPIO Output Control panel.
+
+--------------------------------------------------------------------------------
+SUB-DASHBOARD 5D: AIR QUALITY MONITORING DASHBOARD
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/AirQualityDashboard.jsx
+- URL Route      : Rendered inside /devices/:id (when type === 'air_quality_monitor')
+
+- Purpose        : Environmental safety monitoring tracking Indoor Air Quality (IAQ), 
+                   CO2, TVOC, PM2.5, and PM10 metrics.
+
+- Key Features & Logic:
+  1. Fast Polling: Updates metrics every 3 seconds from `/api/v1/devices/{id}/readings`.
+  2. IAQ Index Status Gauge: Evaluates indoor air quality score (0-500) and displays 
+     status badge: Excellent (0-100), Moderate (101-250), or Unhealthy (>250).
+  3. Multi-Metric Recharts Graph: Dual-line chart plotting CO2 (PPM) vs TVOC (PPB).
+  4. Environmental Risk Alert Banner: Triggers visual warnings when safety limits are breached.
+
+--------------------------------------------------------------------------------
+SUB-DASHBOARD 5E: INDUSTRIAL ENERGY METER DASHBOARD
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/EnergyMeterDashboard.jsx
+- URL Route      : Rendered inside /devices/:id (when type === 'energy_meter')
+
+- Purpose        : Schneider Electric EM6400-series digital energy meter simulation & 
+                   power consumption telemetry (kWh, kW, Volts, Amperes).
+
+- Key Features & Logic:
+  1. Telemetry Polling: Polls energy metrics every 5 seconds.
+  2. Schneider Electric LCD Screen Simulator: Realistic digital multi-function meter display 
+     with 4 tactile operating buttons (UP, DOWN, ESC, OK):
+     - UP / DOWN: Cycles screen mode: kWh -> Active Power (kW) -> Voltage (V) -> Current (A).
+     - ESC: Instantly resets display to default accumulated kWh reading.
+     - OK: Toggles green LCD backlight standby mode ON/OFF.
+  3. 3-Phase LED Indicators: Animated Phase L1, L2, L3 LEDs pulsing in sequence to simulate 
+     AC power load line activity.
+  4. Industrial Digit Formatter: Formats values into Schneider space-separated notation 
+     (e.g., `104 859.712 kWh`).
+  5. Power Load Trend AreaChart: Recharts graph displaying power load fluctuations (kW) over time.
+
+--------------------------------------------------------------------------------
+PAGE 6: USER PROFILE & SECURITY SETTINGS
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/Profile.jsx
+- URL Route      : /profile
+- Access Control : Protected (Requires valid JWT Auth token)
+- Parent Layout  : DashboardLayout.jsx
+
+- Purpose        : Account profile customization, workspace organization settings, plan 
+                   telemetry limit audit, and session security management.
+
+- Key Features & Logic:
+  1. Profile Settings Tab: Form to update Full Name, Phone Number, Organization Name, 
+     and Job Title. Sends `PUT /api/v1/users/me`. Displays Email as immutable ID.
+  2. Plan Telemetry Limits Box: Displays active subscription plan features, device quota 
+     usage bar, historical retention period (7 / 30 / 365 days), and support SLA.
+  3. Security & Sessions Tab:
+     - Google SSO Status: Shows whether account is linked with Google authentication (`google_id`).
+     - Active Sessions List: Lists active authentication tokens with browser device name, 
+       IP address, location, and timestamp. Provides 1-click session revocation button.
+
+--------------------------------------------------------------------------------
+PAGE 7: PLANS & SUBSCRIPTION CHECKOUT
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/Subscription.jsx
+- URL Route      : /subscription
+- Access Control : Protected (Requires valid JWT Auth token)
+- Parent Layout  : DashboardLayout.jsx
+
+- Purpose        : SaaS subscription management, currency selection, PayU payment 
+                   checkout initiation, and subscription cancellation.
+
+- Key Features & Logic:
+  1. Currency Toggle: Toggle switch allowing users to view pricing in INR (₹) or USD ($).
+  2. Pricing Tier Cards:
+     - Starter Basic (₹799 / $9.99): 5 nodes, real-time graphs, 1-day data retention.
+     - Pro Control Center (₹1,999 / $24.99) [Popular]: 15 nodes, 30-day data retention, 
+       custom automation triggers, priority support.
+     - Industrial Grid (₹7,999 / $99.99): Unlimited nodes, 100ms polling, 365-day data 
+       retention, 24/7 SLA phone support.
+  3. PayU Payment Checkout Flow:
+     - Clicking "Upgrade Plan" sends POST to `/api/v1/payment/initiate` with `plan_id` 
+       and `currency`.
+     - Backend generates secure SHA-512 hash token using secret salt key and returns 
+       PayU session parameters.
+     - Frontend dynamically constructs a hidden POST form and auto-submits redirect to 
+       PayU checkout URL.
+  4. Active Subscription Box & Cancel Modal: Displays active subscription details. Includes 
+     "Cancel Subscription" button which opens a modal confirming downgrade to Free plan 
+     via `PUT /api/v1/users/me/subscription`.
+  5. FAQ Accordion: Answers key questions regarding PayU security, gateway redirects, 
+     and plan limits.
+
+--------------------------------------------------------------------------------
+PAGE 8: PAYMENT SUCCESS LANDING
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/PaymentSuccess.jsx
+- URL Route      : /payment/success
+- Access Control : Protected (Requires valid JWT Auth token)
+
+- Purpose        : Landing page presented after a successful PayU payment transaction.
+
+- Key Features & Logic:
+  1. Parses URL query parameters: `txnid`, `plan`, `amount`, `currency`.
+  2. Context Reload: Calls `reloadUser()` from `AuthContext.jsx` to refresh user subscription 
+     data from backend.
+  3. Transaction Receipt Card: Displays emerald success badge, Transaction ID, upgraded 
+     plan name, amount paid, and account email.
+  4. Confirmation Notice: Informs user that confirmation receipt email was sent via Brevo API.
+  5. Action Button: "Go to Console" redirects user to `/`.
+
+--------------------------------------------------------------------------------
+PAGE 9: PAYMENT FAILURE LANDING
+--------------------------------------------------------------------------------
+- Component File : client/src/pages/PaymentFailure.jsx
+- URL Route      : /payment/failure
+- Access Control : Protected (Requires valid JWT Auth token)
+
+- Purpose        : Landing page presented when a PayU payment fails or is cancelled.
+
+- Key Features & Logic:
+  1. Parses URL query parameters: `txnid`, `plan`, `amount`, `currency`, `reason`.
+  2. Transaction Refusal Card: Displays red failure badge, transaction ID, attempted plan, 
+     DECLINED status, and failure reason.
+  3. Refund Notice: Reassures user that no money was charged or that debits will be auto-refunded 
+     by PayU in 3-5 business days.
+  4. Action Buttons: "Retry Payment" (redirects to `/subscription`) and "Return to Dashboard" 
+     (redirects to `/`).
+
+================================================================================
+4. DETAILED BACKEND ROUTER & API ENDPOINTS CATALOG
+================================================================================
+
+--------------------------------------------------------------------------------
+AUTHENTICATION ROUTER (server/app/routers/auth.py)
+--------------------------------------------------------------------------------
+1. POST /api/v1/auth/register
+   - Description: Registers a new user account.
+   - Request Body: `UserCreate` (email, password, full_name)
+   - Functionality: Hashes password with bcrypt, creates User in DB (default plan='starter', 
+     status='active', currency='INR'), dispatches Brevo welcome email.
+   - Response: JSON user object representation.
+
+2. POST /api/v1/auth/login
+   - Description: Authenticates user credentials and issues JWT token.
+   - Request Body: OAuth2Form (username=email, password=password)
+   - Functionality: Verifies bcrypt password hash. Generates JWT access token with 
+     expiry time.
+   - Response: `{"access_token": "...", "token_type": "bearer"}`
+
+3. POST /api/v1/auth/google
+   - Description: Authenticates or registers users via Google OAuth SSO.
+   - Request Body: `{"token": "GOOGLE_ID_TOKEN"}`
+   - Functionality: Verifies Google token using Google Auth library. Looks up user by 
+     google_id or email. Creates user if new. Generates JWT access token.
+   - Response: `{"access_token": "...", "token_type": "bearer"}`
+
+--------------------------------------------------------------------------------
+DEVICE MANAGEMENT ROUTER (server/app/routers/devices.py)
+--------------------------------------------------------------------------------
+1. GET /api/v1/devices/
+   - Description: Retrieves all devices belonging to the logged-in user.
+   - Auth Required: JWT Bearer Token
+   - Functionality: Queries DB. Calculates dynamic `is_online` boolean based on whether 
+     `last_seen` timestamp is within the last 15 seconds.
+
+2. GET /api/v1/devices/limit-info
+   - Description: Returns plan node limit and used device count for the user.
+   - Auth Required: JWT Bearer Token
+   - Response: `{"plan": "starter", "limit": 5, "used": 2, "remaining": 3, "at_limit": false}`
+
+3. GET /api/v1/devices/{device_id}
+   - Description: Retrieves metadata for a specific device by ID.
+
+4. POST /api/v1/devices/
+   - Description: Registers a new device node.
+   - Request Body: `DeviceCreate` (device_id, device_type)
+   - Functionality: Checks user's plan quota. If under limit, creates Device record, 
+     generates unique hex `device_token`.
+
+5. DELETE /api/v1/devices/{device_id}
+   - Description: Deletes a device and all associated sensor readings from DB.
+
+--------------------------------------------------------------------------------
+DATA INGESTION & READINGS ROUTER (server/app/routers/data.py)
+--------------------------------------------------------------------------------
+1. POST /api/v1/data/ingest
+   - Description: High-speed edge ingestion endpoint for microcontrollers.
+   - Header Auth: `X-Device-Token: <token>`
+   - Request Body: `SensorDataIngest` (gas, temp, humidity, heat_index, iaq, co2, tvoc, 
+     pm25, pm10, kWh, kW, volts, amps)
+   - Functionality: Validates device token, updates device `last_seen` timestamp, 
+     stores reading record in `sensor_readings` table.
+
+2. GET /api/v1/devices/{device_id}/readings?limit=20
+   - Description: Retrieves chronological historical sensor readings for a device.
+
+--------------------------------------------------------------------------------
+LDR & GPIO ACTUATOR ROUTER (server/app/routers/ldr.py)
+--------------------------------------------------------------------------------
+1. POST /api/v1/ldr/ingest
+   - Description: Ingestion endpoint for LDR sensor nodes.
+   - Header Auth: `X-Device-Token: <token>`
+   - Request Body: `LDRDataIngest` (analog_value, voltage, lux)
+   - Functionality: Saves LDR reading, updates `last_seen`, returns list of registered 
+     GPIO outputs with current `is_active` state so microcontrollers can toggle relays.
+
+2. GET /api/v1/ldr/{device_id}/readings?limit=20
+   - Description: Retrieves historical LDR light intensity readings.
+
+3. GET /api/v1/ldr/{device_id}/outputs
+   - Description: Retrieves registered GPIO actuator output pins for a device.
+
+4. POST /api/v1/ldr/{device_id}/outputs
+   - Description: Registers a new GPIO output pin actuator (e.g. gpio_pin=18).
+
+5. PUT /api/v1/ldr/outputs/{output_id}
+   - Description: Toggles or updates `is_active` status for a GPIO output pin.
+
+--------------------------------------------------------------------------------
+PAYMENT GATEWAY ROUTER (server/app/routers/payment.py)
+--------------------------------------------------------------------------------
+1. POST /api/v1/payment/initiate
+   - Description: Initiates a PayU payment checkout session.
+   - Auth Required: JWT Bearer Token
+   - Request Body: `{"plan_id": "professional", "currency": "INR"}`
+   - Functionality: Calculates amount based on plan & currency. Generates unique `txnid`. 
+     Computes SHA-512 hash (`sha512(key|txnid|amount|productinfo|firstname|email|...|salt)`). 
+     Returns PayU checkout form parameters and action URL.
+
+2. POST /api/v1/payment/success
+   - Description: PayU HTTP POST callback for successful transaction.
+   - Functionality: Validates PayU reverse SHA-512 hash (`sha512(salt|status|...|key)`). 
+     Updates user subscription plan, status, currency, and expiry (30 days from now). 
+     Logs record in `payments` table. Dispatches confirmation receipt email via Brevo. 
+     Returns HTML response auto-redirecting frontend browser to `/payment/success?txnid=...`.
+
+3. POST /api/v1/payment/failure
+   - Description: PayU HTTP POST callback for failed/declined transaction.
+   - Functionality: Logs failure event. Returns HTML response auto-redirecting browser 
+     to `/payment/failure?txnid=...&reason=...`.
+
+--------------------------------------------------------------------------------
+USER PROFILE ROUTER (server/app/routers/users.py)
+--------------------------------------------------------------------------------
+1. GET /api/v1/users/me
+   - Description: Returns current user's profile, preferences JSON, and subscription status.
+
+2. PUT /api/v1/users/me
+   - Description: Updates profile info (`full_name`, `phone_number`, `preferences` JSON).
+
+3. PUT /api/v1/users/me/subscription
+   - Description: Updates subscription details or cancels active subscription (downgrades to 'free').
+
+--------------------------------------------------------------------------------
+BACKGROUND JOBS & SCHEDULER (server/app/routers/jobs.py & main.py)
+--------------------------------------------------------------------------------
+- APScheduler Background Task: Runs daily at 00:00 UTC (`run_daily_expiry_check`). 
+  Queries users with active paid subscriptions whose `subscription_expiry` is 7 days away. 
+  Dispatches warning emails via Brevo alerting users to renew their plan.
+
+================================================================================
+5. DATABASE SCHEMA & DATA MODELS INTERACTION
+================================================================================
+
+1. `users` Table:
+   - `id` (INTEGER PRIMARY KEY)
+   - `email` (VARCHAR UNIQUE)
+   - `hashed_password` (VARCHAR)
+   - `full_name` (VARCHAR)
+   - `phone_number` (VARCHAR)
+   - `subscription_plan` (VARCHAR DEFAULT 'starter')
+   - `subscription_status` (VARCHAR DEFAULT 'active')
+   - `subscription_currency` (VARCHAR DEFAULT 'INR')
+   - `subscription_expiry` (TIMESTAMP)
+   - `preferences` (JSON / TEXT) - Stores custom UI sensor icon preferences
+   - `google_id` (VARCHAR)
+   - `is_admin` (BOOLEAN DEFAULT FALSE)
+   - `created_at` (TIMESTAMP)
+
+2. `devices` Table:
+   - `id` (INTEGER PRIMARY KEY)
+   - `device_id` (VARCHAR UNIQUE) - User-assigned identifier (e.g. ESP32_ALPHA)
+   - `device_token` (VARCHAR UNIQUE) - Secret key for microcontroller API authentication
+   - `device_type` (VARCHAR) - ('gas_sensor', 'ldr_sensor', 'combined_sensor', 'air_quality_monitor', 'energy_meter')
+   - `user_id` (INTEGER FOREIGN KEY -> users.id)
+   - `last_seen` (TIMESTAMP) - Updated on every ingestion payload
+
+3. `sensor_readings` Table:
+   - `id` (INTEGER PRIMARY KEY)
+   - `device_id` (VARCHAR FOREIGN KEY -> devices.device_id)
+   - `gas` (FLOAT), `temp` (FLOAT), `humidity` (FLOAT), `heat_index` (FLOAT)
+   - `iaq` (FLOAT), `co2` (FLOAT), `tvoc` (FLOAT), `pm25` (FLOAT), `pm10` (FLOAT)
+   - `kWh` (FLOAT), `kW` (FLOAT), `volts` (FLOAT), `amps` (FLOAT)
+   - `timestamp` (TIMESTAMP DEFAULT UTC NOW)
+
+4. `ldr_readings` Table:
+   - `id` (INTEGER PRIMARY KEY)
+   - `device_id` (VARCHAR FOREIGN KEY -> devices.device_id)
+   - `analog_value` (INTEGER)
+   - `voltage` (FLOAT)
+   - `lux` (FLOAT)
+   - `timestamp` (TIMESTAMP DEFAULT UTC NOW)
+
+5. `ldr_outputs` Table:
+   - `id` (INTEGER PRIMARY KEY)
+   - `device_id` (VARCHAR FOREIGN KEY -> devices.device_id)
+   - `output_name` (VARCHAR)
+   - `gpio_pin` (INTEGER)
+   - `is_active` (BOOLEAN DEFAULT FALSE)
+
+6. `payments` Table:
+   - `id` (INTEGER PRIMARY KEY)
+   - `user_id` (INTEGER FOREIGN KEY -> users.id)
+   - `txnid` (VARCHAR UNIQUE)
+   - `amount` (FLOAT)
+   - `currency` (VARCHAR)
+   - `plan_id` (VARCHAR)
+   - `status` (VARCHAR) - ('SUCCESS', 'FAILURE', 'PENDING')
+   - `payu_mihpayid` (VARCHAR)
+   - `created_at` (TIMESTAMP)
+
+================================================================================
+6. SECURITY, RATE LIMITING & ERROR HANDLING
+================================================================================
+
+1. Rate Limiting Middleware (`RateLimitMiddleware` in `server/app/main.py`):
+   - Sliding Window In-Memory Rate Limiter enforced on authentication & edge ingestion routes.
+   - Limit: Maximum 30 requests per 60-second window per client IP address.
+   - Throttled Paths: `/auth/login`, `/auth/register`, `/auth/google`, `/api/v1/ingest`.
+   - Returns HTTP 429 Too Many Requests when threshold is exceeded.
+
+2. CORS Configuration:
+   - Configured dynamically to allow localhost development ports (5173, 3000, 4173, 8000), 
+     LAN IP addresses, and production domains (`indianiiot.com`, `mq-gas-censor-tronix.pages.dev`).
+
+3. PayU SHA-512 Security:
+   - All payment requests and callbacks use SHA-512 hashing with secret salt keys stored 
+     securely in server environment variables (`PAYU_MERCHANT_KEY`, `PAYU_MERCHANT_SALT`), 
+     preventing payment tampering or unauthorized plan escalations.
+
+================================================================================
+END OF DOCUMENTATION FILE
+================================================================================
