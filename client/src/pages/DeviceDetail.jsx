@@ -15,10 +15,24 @@ const DeviceDetail = () => {
     useEffect(() => {
         const fetchDeviceInfo = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/${id}`);
+                const cleanId = encodeURIComponent(id.trim());
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/${cleanId}`);
                 setDevice(response.data);
             } catch (error) {
-                console.error("Error fetching device info:", error);
+                console.error("Error fetching device info directly, trying list fallback:", error);
+                try {
+                    const listRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/`);
+                    const rawId = decodeURIComponent(id).trim().toLowerCase();
+                    const matched = listRes.data.find(d => 
+                        d.device_id.trim().toLowerCase() === rawId ||
+                        d.device_id.trim() === id.trim()
+                    );
+                    if (matched) {
+                        setDevice(matched);
+                    }
+                } catch (err) {
+                    console.error("Fallback device list fetch failed:", err);
+                }
             } finally {
                 setLoading(false);
             }
@@ -27,11 +41,16 @@ const DeviceDetail = () => {
     }, [id]);
 
     if (loading) {
-        return <div className="p-8 text-center text-secondary">Loading device configuration...</div>;
+        return <div className="p-8 text-center text-slate-400 font-medium">Loading device configuration...</div>;
     }
 
     if (!device) {
-        return <div className="p-8 text-center text-red-500">Device not found</div>;
+        return (
+            <div className="p-8 text-center max-w-md mx-auto my-12 neo-card border border-rose-500/20">
+                <h3 className="text-xl font-bold text-white mb-2">Device Not Found</h3>
+                <p className="text-xs text-slate-400 mb-4">No active node registered with ID <code className="text-amber-400">{id}</code>.</p>
+            </div>
+        );
     }
 
     if (device.device_type === 'ldr_sensor') {
@@ -50,7 +69,7 @@ const DeviceDetail = () => {
         return <EnergyMeterDashboard id={id} device={device} />;
     }
 
-    // Default to Gas Sensor if type is missing or matches
+    // Default to Gas Sensor
     return <GasDashboard id={id} device={device} />;
 };
 

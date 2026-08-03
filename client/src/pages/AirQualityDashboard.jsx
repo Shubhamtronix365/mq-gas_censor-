@@ -83,21 +83,23 @@ const AirQualityDashboard = ({ id, device }) => {
         setActiveScreenMode(prev => (prev === 3 ? 0 : prev + 1));
     };
 
-    // Telemetry values with fallbacks matching interface
-    const aqiVal = latest?.iaq ?? latest?.aqi ?? 28;
-    const pm25Val = latest?.pm25 ?? 18;
-    const pm10Val = latest?.pm10 ?? 28;
-    const tempVal = latest?.temperature ? Number(latest.temperature).toFixed(1) : "28.6";
-    const humidityVal = latest?.humidity ? Number(latest.humidity).toFixed(0) : "65";
-    const co2Val = latest?.co2 ? Number(latest.co2).toFixed(0) : "520";
-    const o2Val = latest?.oxygen ? Number(latest.oxygen).toFixed(1) : "20.9";
-    const vocVal = latest?.voc ?? latest?.voc_index ?? 124;
-    const hchoVal = latest?.hcho ? Number(latest.hcho).toFixed(2) : "0.02";
-    const pressureVal = latest?.pressure ? Number(latest.pressure).toFixed(0) : "1013";
+    // 100% Dynamic Telemetry values - ONLY rendered when real-time data is coming from the sensor
+    const hasRealTimeData = latest !== null && latest !== undefined;
 
-    const aqiPct = Math.min(100, Math.max(0, Math.round((aqiVal / 500) * 100)));
-    const aqiStatus = aqiVal <= 50 ? "Good" : aqiVal <= 100 ? "Moderate" : aqiVal <= 200 ? "Unhealthy" : "Hazardous";
-    const aqiColorHex = aqiVal <= 50 ? "#10b981" : aqiVal <= 100 ? "#f59e0b" : "#ef4444";
+    const aqiVal = latest?.iaq ?? latest?.aqi ?? null;
+    const pm25Val = latest?.pm25 ?? null;
+    const pm10Val = latest?.pm10 ?? null;
+    const tempVal = latest?.temperature !== undefined && latest?.temperature !== null ? Number(latest.temperature).toFixed(1) : null;
+    const humidityVal = latest?.humidity !== undefined && latest?.humidity !== null ? Number(latest.humidity).toFixed(0) : null;
+    const co2Val = latest?.co2 !== undefined && latest?.co2 !== null ? Number(latest.co2).toFixed(0) : null;
+    const o2Val = latest?.oxygen !== undefined && latest?.oxygen !== null ? Number(latest.oxygen).toFixed(1) : null;
+    const vocVal = latest?.voc ?? latest?.voc_index ?? null;
+    const hchoVal = latest?.hcho !== undefined && latest?.hcho !== null ? Number(latest.hcho).toFixed(2) : null;
+    const pressureVal = latest?.pressure !== undefined && latest?.pressure !== null ? Number(latest.pressure).toFixed(0) : null;
+
+    const aqiPct = aqiVal !== null ? Math.min(100, Math.max(0, Math.round((aqiVal / 500) * 100))) : 0;
+    const aqiStatus = aqiVal === null ? "WAITING FOR DATA" : aqiVal <= 50 ? "Good" : aqiVal <= 100 ? "Moderate" : aqiVal <= 200 ? "Unhealthy" : "Hazardous";
+    const aqiColorHex = aqiVal === null ? "#64748b" : aqiVal <= 50 ? "#10b981" : aqiVal <= 100 ? "#f59e0b" : "#ef4444";
 
     const container = {
         hidden: { opacity: 0 },
@@ -116,7 +118,7 @@ const AirQualityDashboard = ({ id, device }) => {
                         <div key={index} className="flex items-center justify-between gap-4 mb-1 last:mb-0">
                             <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{entry.name}</span>
                             <span className="text-sm font-bold" style={{ color: entry.color }}>
-                                {Number(entry.value).toFixed(1)}
+                                {entry.value !== null && entry.value !== undefined ? Number(entry.value).toFixed(1) : "--"}
                             </span>
                         </div>
                     ))}
@@ -126,9 +128,10 @@ const AirQualityDashboard = ({ id, device }) => {
         return null;
     };
 
-    // Reusable Semi-Circular Arc Gauge Component
+    // Reusable Dynamic Semi-Circular Arc Gauge Component
     const renderArcGauge = (val, min, max, colorHex, label, unit = "", statusText = "", size = "normal") => {
-        const pct = Math.min(100, Math.max(0, Math.round(((val - min) / (max - min)) * 100)));
+        const numVal = val !== null && val !== undefined ? Number(val) : null;
+        const pct = numVal !== null ? Math.min(100, Math.max(0, Math.round(((numVal - min) / (max - min)) * 100))) : 0;
         const circumference = Math.PI * 45;
         const strokeDashoffset = circumference - (pct / 100) * circumference;
 
@@ -137,8 +140,8 @@ const AirQualityDashboard = ({ id, device }) => {
                 <svg className={size === "lg" ? "w-44 h-24 overflow-visible" : "w-28 h-16 overflow-visible"} viewBox="0 0 110 60">
                     <defs>
                         <linearGradient id={`grad-${label}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor={colorHex} stopOpacity={0.7} />
-                            <stop offset="100%" stopColor={colorHex} />
+                            <stop offset="0%" stopColor={numVal !== null ? colorHex : "#475569"} stopOpacity={0.7} />
+                            <stop offset="100%" stopColor={numVal !== null ? colorHex : "#475569"} />
                         </linearGradient>
                         <filter id={`glow-${label}`} x="-20%" y="-20%" width="140%" height="140%">
                             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -154,12 +157,14 @@ const AirQualityDashboard = ({ id, device }) => {
                         strokeLinecap="round"
                         strokeDasharray={circumference}
                         strokeDashoffset={strokeDashoffset}
-                        filter={`url(#glow-${label})`}
+                        filter={numVal !== null ? `url(#glow-${label})` : "none"}
                         className="transition-all duration-700 ease-out"
                     />
                 </svg>
                 <div className="absolute bottom-0 flex flex-col items-center">
-                    <span className="text-lg font-black text-white tracking-tight">{val} <span className="text-[9px] text-slate-400 font-normal">{unit}</span></span>
+                    <span className="text-lg font-black text-white tracking-tight">
+                        {numVal !== null ? numVal : "--"} <span className="text-[9px] text-slate-400 font-normal">{unit}</span>
+                    </span>
                 </div>
             </div>
         );
@@ -465,11 +470,11 @@ const AirQualityDashboard = ({ id, device }) => {
                             <div className="flex justify-between items-baseline my-1">
                                 <div>
                                     <span className="text-[9px] text-slate-400 font-bold uppercase">PM2.5</span>
-                                    <div className="text-xl font-black text-white">{pm25Val} <span className="text-[9px] text-slate-500 font-normal">µg/m³</span></div>
+                                    <div className="text-xl font-black text-white">{pm25Val ?? "--"} <span className="text-[9px] text-slate-500 font-normal">µg/m³</span></div>
                                 </div>
                                 <div>
                                     <span className="text-[9px] text-slate-400 font-bold uppercase">PM10</span>
-                                    <div className="text-xl font-black text-purple-400">{pm10Val} <span className="text-[9px] text-slate-500 font-normal">µg/m³</span></div>
+                                    <div className="text-xl font-black text-purple-400">{pm10Val ?? "--"} <span className="text-[9px] text-slate-500 font-normal">µg/m³</span></div>
                                 </div>
                             </div>
                             {/* Sparkline curve */}
@@ -478,7 +483,9 @@ const AirQualityDashboard = ({ id, device }) => {
                                     <path d="M 0 18 Q 20 8 40 16 T 80 10 T 100 14" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeLinecap="round" />
                                 </svg>
                             </div>
-                            <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-1">• Good</span>
+                            <span className={clsx("text-[9px] font-bold uppercase tracking-wider mt-1", pm25Val !== null ? "text-emerald-400" : "text-slate-500")}>
+                                {pm25Val !== null ? "• Good" : "• Waiting Data"}
+                            </span>
                         </motion.div>
 
                         {/* Card 2: TEMPERATURE */}
@@ -491,7 +498,7 @@ const AirQualityDashboard = ({ id, device }) => {
                             </div>
                             <div>
                                 <span className="text-[9px] text-slate-400 font-bold uppercase">TEMP.</span>
-                                <div className="text-2xl font-black text-white">{tempVal} <span className="text-xs font-semibold text-slate-500">°C</span></div>
+                                <div className="text-2xl font-black text-white">{tempVal ?? "--"} <span className="text-xs font-semibold text-slate-500">°C</span></div>
                             </div>
                             {/* Sparkline curve */}
                             <div className="w-full h-7 mt-1 overflow-hidden opacity-70 group-hover:opacity-100 transition-opacity">
@@ -499,7 +506,9 @@ const AirQualityDashboard = ({ id, device }) => {
                                     <path d="M 0 14 Q 25 20 50 10 T 75 16 T 100 12" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
                                 </svg>
                             </div>
-                            <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider mt-1">• Normal</span>
+                            <span className={clsx("text-[9px] font-bold uppercase tracking-wider mt-1", tempVal !== null ? "text-blue-400" : "text-slate-500")}>
+                                {tempVal !== null ? "• Normal" : "• Waiting Data"}
+                            </span>
                         </motion.div>
 
                         {/* Card 3: HUMIDITY */}
@@ -512,7 +521,7 @@ const AirQualityDashboard = ({ id, device }) => {
                             </div>
                             <div>
                                 <span className="text-[9px] text-slate-400 font-bold uppercase">RELATIVE HUMIDITY</span>
-                                <div className="text-2xl font-black text-white">{humidityVal} <span className="text-xs font-semibold text-slate-500">%</span></div>
+                                <div className="text-2xl font-black text-white">{humidityVal ?? "--"} <span className="text-xs font-semibold text-slate-500">%</span></div>
                             </div>
                             {/* Sparkline curve */}
                             <div className="w-full h-7 mt-1 overflow-hidden opacity-70 group-hover:opacity-100 transition-opacity">
@@ -520,7 +529,9 @@ const AirQualityDashboard = ({ id, device }) => {
                                     <path d="M 0 16 Q 30 10 60 18 T 100 8" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
                                 </svg>
                             </div>
-                            <span className="text-[9px] text-pink-400 font-bold uppercase tracking-wider mt-1">• Normal</span>
+                            <span className={clsx("text-[9px] font-bold uppercase tracking-wider mt-1", humidityVal !== null ? "text-pink-400" : "text-slate-500")}>
+                                {humidityVal !== null ? "• Normal" : "• Waiting Data"}
+                            </span>
                         </motion.div>
 
                         {/* Card 4: SAFETY INDEX */}

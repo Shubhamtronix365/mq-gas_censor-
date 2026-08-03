@@ -32,41 +32,43 @@ const UnifiedDashboard = ({ id, device }) => {
 
     const fetchData = async () => {
         try {
-            const [gasRes, ldrRes, outputsRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/${id}/readings?limit=20`),
-                axios.get(`${import.meta.env.VITE_API_URL}/api/v1/ldr/${id}/readings?limit=20`),
-                axios.get(`${import.meta.env.VITE_API_URL}/api/v1/ldr/${id}/outputs`)
+            const cleanId = encodeURIComponent(id.trim());
+            const [gasRes, ldrRes, outputsRes] = await Promise.allSettled([
+                axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/${cleanId}/readings?limit=20`),
+                axios.get(`${import.meta.env.VITE_API_URL}/api/v1/ldr/${cleanId}/readings?limit=20`),
+                axios.get(`${import.meta.env.VITE_API_URL}/api/v1/ldr/${cleanId}/outputs`)
             ]);
 
             // Process Gas Data
-            const gasData = gasRes.data.reverse();
+            const gasData = gasRes.status === "fulfilled" ? gasRes.value.data.reverse() : [];
             setGasReadings(gasData);
             if (gasData.length > 0) setLatestGas(gasData[gasData.length - 1]);
 
             // Process LDR Data
-            const ldrData = ldrRes.data.reverse(); // Ensure chronological
+            const ldrData = ldrRes.status === "fulfilled" ? ldrRes.value.data.reverse() : [];
             setLdrReadings(ldrData);
             if (ldrData.length > 0) setLatestLdr(ldrData[ldrData.length - 1]);
 
-            // Merge Data for Dual Chart (approximate matching by index/time if needed, or just display latest overlap)
-            // For simplicity in this demo, we'll map them by index if timestamps align, or just take the length of the shorter one
+            // Merge Data for Dual Chart
             const minLength = Math.min(gasData.length, ldrData.length);
             const merged = [];
             for (let i = 0; i < minLength; i++) {
                 merged.push({
-                    timestamp: gasData[i].timestamp, // Prefer gas timestamp or average
+                    timestamp: gasData[i].timestamp,
                     gas: gasData[i].gas,
                     light: ldrData[i].analog_value
                 });
             }
             setMergedData(merged);
 
-            setOutputs(outputsRes.data);
+            const outputsData = outputsRes.status === "fulfilled" ? outputsRes.value.data : [];
+            setOutputs(outputsData);
         } catch (error) {
-            console.error("Error fetching data:", error);
+            console.error("Error fetching unified readings:", error);
         } finally {
             setLoading(false);
         }
+    };
     };
 
     const copyToClipboard = () => {

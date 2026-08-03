@@ -61,9 +61,22 @@ def get_device_limit_info(current_user: models.User = Depends(auth.get_current_u
         "at_limit":   count >= limit,
     }
 
+from sqlalchemy import func
+import urllib.parse
+
 @router.get("/{device_id}", response_model=schemas.DeviceResponse)
 def get_device(device_id: str, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    device = db.query(models.Device).filter(models.Device.device_id == device_id, models.Device.owner_id == current_user.id).first()
+    clean_id = urllib.parse.unquote(device_id).strip()
+    device = db.query(models.Device).filter(
+        func.lower(models.Device.device_id) == func.lower(clean_id),
+        models.Device.owner_id == current_user.id
+    ).first()
+    if not device:
+        # Fallback exact match
+        device = db.query(models.Device).filter(
+            models.Device.device_id == clean_id,
+            models.Device.owner_id == current_user.id
+        ).first()
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
     return format_device_response(device)
