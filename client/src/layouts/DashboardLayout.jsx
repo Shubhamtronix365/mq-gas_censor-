@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { 
@@ -55,11 +55,9 @@ const DashboardLayout = () => {
     const NavItem = ({ to, icon: Icon, label }) => {
         const isActive = location.pathname === to;
         return (
-            <button
-                onClick={() => {
-                    navigate(to);
-                    setMobileMenuOpen(false);
-                }}
+            <Link
+                to={to}
+                onClick={() => setMobileMenuOpen(false)}
                 className={clsx(
                     "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full relative overflow-hidden group cursor-pointer",
                     isActive ? "text-white bg-blue-600/20 border-l-4 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]" : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -76,7 +74,7 @@ const DashboardLayout = () => {
                 )}
                 <Icon size={19} className={clsx("relative z-10", isActive ? "text-blue-400" : "group-hover:text-blue-400 transition-colors")} />
                 <span className="relative z-10 font-semibold text-sm tracking-wide">{label}</span>
-            </button>
+            </Link>
         );
     };
 
