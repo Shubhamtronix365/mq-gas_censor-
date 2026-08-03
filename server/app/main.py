@@ -125,9 +125,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 
         return await call_next(request)
 
-# Add Rate Limiter Middleware
-app.add_middleware(RateLimitMiddleware, limit=30, window=60)
-
 # Configure CORS dynamically for local & hosted deployment environments
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
 custom_origins = []
@@ -150,20 +147,33 @@ default_origins = [
     "https://mq-gas-censor-sensegrid-api-tronix.onrender.com",
 ]
 
-# Combine and deduplicate origins without trailing slashes
+# Combine and deduplicate origins
 origins = list(set(default_origins + custom_origins))
 
-# Regex matching all HTTP/HTTPS development and production origins
-origin_regex = r"https?://.*"
-
+# CORSMiddleware must be added FIRST so it wraps all responses (including 404, 429, and 500 errors)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=origin_regex,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False, # Setting allow_credentials=False allows wildcard origin '*' to function unconditionally across all domain origins
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add Rate Limiter Middleware inside CORS wrapper
+app.add_middleware(RateLimitMiddleware, limit=60, window=60)
+
+# Explicit OPTIONS Preflight Route Catch-All to prevent browser preflight CORS blocks
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return JSONResponse(
+        status_code=200,
+        content={"status": "ok"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 app.include_router(auth.router)
 app.include_router(users.router)
