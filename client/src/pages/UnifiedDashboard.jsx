@@ -69,7 +69,6 @@ const UnifiedDashboard = ({ id, device }) => {
             setLoading(false);
         }
     };
-    };
 
     const copyToClipboard = () => {
         if (device?.device_token) {
