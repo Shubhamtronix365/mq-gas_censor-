@@ -233,11 +233,9 @@ const DashboardLayout = () => {
                         <nav className="flex-1 px-4 space-y-1.5 mt-4 md:mt-2">
                             <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
                             <NavItem to="/devices" icon={Server} label="Devices" />
-                            <NavItem to="/devices?filter=alerts" icon={ShieldAlert} label="Alerts" />
-                            <NavItem to="/devices?filter=analytics" icon={BarChart2} label="Analytics" />
-                            <NavItem to="/devices?filter=energy" icon={Zap} label="Energy Monitor" />
+                            <NavItem to="/analytics" icon={BarChart2} label="Analytics" />
                             <NavItem to="/profile" icon={User} label="Profile" />
-                            <NavItem to="/profile?tab=settings" icon={Settings} label="Settings" />
+                            <NavItem to="/subscription" icon={CreditCard} label="Subscription" />
                         </nav>
 
                         {/* Bottom Plan Card Widget matching Dashboard.png */}
