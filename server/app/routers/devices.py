@@ -43,9 +43,22 @@ def format_device_response(device: models.Device) -> dict:
         "is_online": is_online
     }
 
+from typing import List, Optional
+
 @router.get("/", response_model=List[schemas.DeviceResponse])
-def get_my_devices(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    return [format_device_response(d) for d in current_user.devices]
+def get_my_devices(
+    search: Optional[str] = None,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    devices = current_user.devices
+    if search:
+        s = search.strip().lower()
+        devices = [
+            d for d in devices
+            if s in (d.device_id or "").lower() or s in (d.device_type or "").lower()
+        ]
+    return [format_device_response(d) for d in devices]
 
 @router.get("/limit-info")
 def get_device_limit_info(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):

@@ -1,55 +1,209 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { 
     LogOut, LayoutDashboard, Server, User, Menu, X, Zap, ChevronDown, Bell, Settings, 
-    CreditCard, Cloud, Search, Award, Activity, BarChart2, ShieldAlert, Sliders
+    CreditCard, Cloud, Search, Award, Activity, BarChart2, ShieldAlert, Sliders,
+    Command, ArrowRight, CheckCircle2, AlertTriangle, Sparkles
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import LayoutWrapper from "./LayoutWrapper";
 
+const APP_PAGES = [
+    { title: "Dashboard Overview", path: "/", type: "page", icon: LayoutDashboard, desc: "Main telemetry & KPI overview" },
+    { title: "All Devices & Nodes", path: "/devices", type: "page", icon: Server, desc: "Manage all deployed node instances" },
+    { title: "Analytics & Reports", path: "/analytics", type: "page", icon: BarChart2, desc: "System performance, charts & metrics" },
+    { title: "User Profile & Settings", path: "/profile", type: "page", icon: User, desc: "Account settings & preference options" },
+    { title: "Subscription & Billing", path: "/subscription", type: "page", icon: CreditCard, desc: "Manage plan limits and billing" },
+    { title: "Gas Sensor Monitor", path: "/devices?search=gas_sensor", type: "page", icon: Zap, desc: "Gas concentration & safety node" },
+    { title: "Air Quality Monitor", path: "/devices?search=air_quality_monitor", type: "page", icon: Activity, desc: "AQI & environmental sensor node" },
+    { title: "Light / LDR Sensor", path: "/devices?search=ldr_sensor", type: "page", icon: Sliders, desc: "Ambient illuminance & light node" },
+    { title: "Energy Meter Node", path: "/devices?search=energy_meter", type: "page", icon: ShieldAlert, desc: "Electrical load & power monitor" },
+];
+
+const QUICK_ACTIONS = [
+    { title: "Deploy New Sensor Node", path: "/devices", action: "deploy", icon: Zap, desc: "Add a new node to your fleet" },
+    { title: "Upgrade Subscription Plan", path: "/subscription", action: "upgrade", icon: Award, desc: "Unlock higher node limits" },
+    { title: "Configure Profile Settings", path: "/profile", action: "profile", icon: Settings, desc: "Update user profile & credentials" },
+];
+
 const DashboardLayout = () => {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [deviceCount, setDeviceCount] = useState(0);
     const [deviceLimit, setDeviceLimit] = useState(15);
+    const [userDevices, setUserDevices] = useState([]);
+    
     const [searchQuery, setSearchQuery] = useState("");
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    
+    const searchInputRef = useRef(null);
+    const mobileSearchInputRef = useRef(null);
+    const searchContainerRef = useRef(null);
 
+    // Sync search input with URL search param if on devices page
     useEffect(() => {
-        const fetchPlanUsage = async () => {
+        const searchParams = new URLSearchParams(location.search);
+        const queryParam = searchParams.get("search");
+        if (location.pathname === "/devices" && queryParam !== null) {
+            setSearchQuery(queryParam);
+        }
+    }, [location.pathname, location.search]);
+
+    // Fetch plan usage & user devices
+    useEffect(() => {
+        const fetchPlanAndDevices = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/limit-info`);
-                setDeviceCount(res.data.used ?? 0);
-                setDeviceLimit(res.data.limit ?? 15);
-            } catch (err) {
-                // Fallback device count
-                try {
-                    const devRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/`);
-                    setDeviceCount(devRes.data?.length ?? 0);
-                } catch (e) {
-                    console.error("Plan usage fetch error", e);
+                const [limitRes, devRes] = await Promise.all([
+                    axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/limit-info`).catch(() => null),
+                    axios.get(`${import.meta.env.VITE_API_URL}/api/v1/devices/`).catch(() => null)
+                ]);
+
+                if (limitRes?.data) {
+                    setDeviceCount(limitRes.data.used ?? 0);
+                    setDeviceLimit(limitRes.data.limit ?? 15);
                 }
+                if (devRes?.data) {
+                    setUserDevices(devRes.data || []);
+                    if (!limitRes?.data) {
+                        setDeviceCount(devRes.data.length ?? 0);
+                    }
+                }
+            } catch (err) {
+                console.error("Dashboard fetch error:", err);
             }
         };
-        fetchPlanUsage();
+        fetchPlanAndDevices();
     }, [location.pathname]);
 
-    const handleLogout = () => {
-        logout();
-        navigate("/login");
-    };
+    // Keyboard shortcut Ctrl+K / Cmd+K listener
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                if (mobileSearchOpen) {
+                    mobileSearchInputRef.current?.focus();
+                } else {
+                    searchInputRef.current?.focus();
+                }
+                setIsSearchFocused(true);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [mobileSearchOpen]);
+
+    // Outside click dismissal
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+                setIsSearchFocused(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Filter search results dynamically
+    const q = searchQuery.trim().toLowerCase();
+
+    const filteredDevices = q
+        ? userDevices.filter(d => 
+            d.device_id.toLowerCase().includes(q) ||
+            (d.device_type && d.device_type.toLowerCase().includes(q)) ||
+            (d.device_type === 'gas_sensor' && 'gas node'.includes(q)) ||
+            (d.device_type === 'ldr_sensor' && 'light node'.includes(q)) ||
+            (d.device_type === 'air_quality_monitor' && 'air quality node'.includes(q)) ||
+            (d.device_type === 'combined_sensor' && 'fusion node'.includes(q)) ||
+            (d.device_type === 'energy_meter' && 'energy meter power'.includes(q))
+          )
+        : userDevices.slice(0, 4);
+
+    const filteredPages = q
+        ? APP_PAGES.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.path.toLowerCase().includes(q))
+        : APP_PAGES.slice(0, 4);
+
+    const filteredActions = q
+        ? QUICK_ACTIONS.filter(a => a.title.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q))
+        : QUICK_ACTIONS;
+
+    // Combined flat list of visible search items for arrow key navigation
+    const allSearchItems = [
+        ...filteredDevices.map(d => ({
+            id: `dev-${d.device_id}`,
+            category: "Devices & Nodes",
+            title: d.device_type === 'ldr_sensor' ? 'LightNode' :
+                   d.device_type === 'combined_sensor' ? 'FusionNode' :
+                   d.device_type === 'air_quality_monitor' ? 'AirQualityNode' :
+                   d.device_type === 'energy_meter' ? 'Energy Meter' : 'GasNode',
+            subtitle: `ID: ${d.device_id} • ${d.is_online ? 'ONLINE' : 'OFFLINE'}`,
+            icon: Server,
+            isOnline: d.is_online,
+            onSelect: () => navigate(`/devices/${d.device_id}`)
+        })),
+        ...filteredPages.map(p => ({
+            id: `page-${p.path}`,
+            category: "Pages & Dashboards",
+            title: p.title,
+            subtitle: p.desc,
+            icon: p.icon,
+            onSelect: () => navigate(p.path)
+        })),
+        ...filteredActions.map(a => ({
+            id: `act-${a.title}`,
+            category: "Quick Actions",
+            title: a.title,
+            subtitle: a.desc,
+            icon: a.icon,
+            onSelect: () => navigate(a.path)
+        }))
+    ];
+
+    // Reset selected index when query changes
+    useEffect(() => {
+        setSelectedIndex(0);
+    }, [searchQuery]);
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
+        setIsSearchFocused(false);
+        setMobileSearchOpen(false);
+
+        if (allSearchItems.length > 0 && selectedIndex < allSearchItems.length) {
+            allSearchItems[selectedIndex].onSelect();
+        } else if (searchQuery.trim()) {
             navigate(`/devices?search=${encodeURIComponent(searchQuery.trim())}`);
         } else {
             navigate('/devices');
         }
+    };
+
+    const handleKeyDownInInput = (e) => {
+        if (!allSearchItems.length) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (prev + 1) % allSearchItems.length);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (prev - 1 + allSearchItems.length) % allSearchItems.length);
+        } else if (e.key === "Escape") {
+            setIsSearchFocused(false);
+            setMobileSearchOpen(false);
+            searchInputRef.current?.blur();
+        }
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login");
     };
 
     const NavItem = ({ to, icon: Icon, label }) => {
@@ -159,6 +313,13 @@ const DashboardLayout = () => {
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+                        className="p-2 text-slate-400 hover:text-white rounded-xl bg-white/5 border border-white/5"
+                        aria-label="Toggle Mobile Search"
+                    >
+                        <Search size={18} />
+                    </button>
                     <UserDropdown />
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -169,6 +330,41 @@ const DashboardLayout = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Mobile Search Overlay Bar */}
+            <AnimatePresence>
+                {mobileSearchOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="md:hidden fixed top-16 inset-x-0 z-30 p-3 bg-[#080d1a] border-b border-white/10 shadow-2xl"
+                    >
+                        <form onSubmit={handleSearchSubmit} className="relative w-full">
+                            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                ref={mobileSearchInputRef}
+                                type="text"
+                                placeholder="Search nodes, pages, or metrics..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                onKeyDown={handleKeyDownInInput}
+                                autoFocus
+                                className="w-full pl-10 pr-10 py-2.5 bg-slate-900/90 border border-blue-500/40 rounded-xl text-xs text-white placeholder-slate-500 outline-none"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery("")}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Mobile Backdrop Overlay */}
             <AnimatePresence>
@@ -266,20 +462,129 @@ const DashboardLayout = () => {
             {/* Main Center & Right Container */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-0">
                 
-                {/* Desktop Top Header Bar matching Dashboard.png */}
+                {/* Desktop Top Header Bar */}
                 <header className="hidden md:flex h-20 items-center justify-between px-8 border-b border-white/5 bg-[#030712]/60 backdrop-blur-md sticky top-0 z-30">
                     
-                    {/* Search Bar Input */}
-                    <form onSubmit={handleSearchSubmit} className="relative w-80">
-                        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search devices..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-slate-900/80 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500/50 transition-all"
-                        />
-                    </form>
+                    {/* Interactive Command Search Bar Component */}
+                    <div ref={searchContainerRef} className="relative w-96">
+                        <form onSubmit={handleSearchSubmit} className="relative">
+                            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                placeholder="Search nodes, pages, metrics... (Ctrl+K)"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                onFocus={() => setIsSearchFocused(true)}
+                                onKeyDown={handleKeyDownInInput}
+                                className={clsx(
+                                    "w-full pl-10 pr-16 py-2 bg-slate-900/80 border rounded-xl text-xs text-white placeholder-slate-500 outline-none transition-all",
+                                    isSearchFocused ? "border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] bg-slate-900" : "border-white/10 hover:border-white/20"
+                                )}
+                            />
+                            {searchQuery ? (
+                                <button
+                                    type="button"
+                                    onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-md transition-colors"
+                                >
+                                    <X size={13} />
+                                </button>
+                            ) : (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/10 pointer-events-none font-mono">
+                                    <span>Ctrl</span>
+                                    <span>K</span>
+                                </div>
+                            )}
+                        </form>
+
+                        {/* Live Auto-suggest Dropdown */}
+                        <AnimatePresence>
+                            {isSearchFocused && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute left-0 right-0 top-full mt-2 bg-[#080d1a]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-[460px] overflow-y-auto divide-y divide-white/5"
+                                >
+                                    {allSearchItems.length === 0 ? (
+                                        <div className="p-6 text-center text-slate-400">
+                                            <AlertTriangle size={24} className="mx-auto text-amber-400/80 mb-2" />
+                                            <p className="text-xs font-bold text-slate-300">No matching results found</p>
+                                            <p className="text-[11px] text-slate-500 mt-1">Try searching for 'gas', 'ldr', 'air', 'analytics', or 'profile'</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Render by Category */}
+                                            {["Devices & Nodes", "Pages & Dashboards", "Quick Actions"].map((categoryName) => {
+                                                const itemsInCategory = allSearchItems.filter(item => item.category === categoryName);
+                                                if (itemsInCategory.length === 0) return null;
+
+                                                return (
+                                                    <div key={categoryName} className="p-2">
+                                                        <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-400/80 flex items-center justify-between">
+                                                            <span>{categoryName}</span>
+                                                            <span className="text-slate-500 font-mono font-normal">{itemsInCategory.length}</span>
+                                                        </div>
+                                                        <div className="space-y-1 mt-0.5">
+                                                            {itemsInCategory.map((item) => {
+                                                                const globalIdx = allSearchItems.findIndex(i => i.id === item.id);
+                                                                const isSelected = globalIdx === selectedIndex;
+                                                                const ItemIcon = item.icon;
+
+                                                                return (
+                                                                    <div
+                                                                        key={item.id}
+                                                                        onClick={() => {
+                                                                            item.onSelect();
+                                                                            setIsSearchFocused(false);
+                                                                        }}
+                                                                        onMouseEnter={() => setSelectedIndex(globalIdx)}
+                                                                        className={clsx(
+                                                                            "flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all",
+                                                                            isSelected ? "bg-blue-600/20 border border-blue-500/40 text-white" : "hover:bg-white/5 text-slate-300"
+                                                                        )}
+                                                                    >
+                                                                        <div className="flex items-center gap-3 min-w-0">
+                                                                            <div className={clsx(
+                                                                                "p-2 rounded-lg shrink-0",
+                                                                                isSelected ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-slate-400"
+                                                                            )}>
+                                                                                <ItemIcon size={16} />
+                                                                            </div>
+                                                                            <div className="min-w-0">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <p className="text-xs font-bold truncate text-white">{item.title}</p>
+                                                                                    {item.isOnline !== undefined && (
+                                                                                        <span className={clsx(
+                                                                                            "w-2 h-2 rounded-full",
+                                                                                            item.isOnline ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-slate-600"
+                                                                                        )} />
+                                                                                    )}
+                                                                                </div>
+                                                                                <p className="text-[11px] text-slate-400 truncate mt-0.5">{item.subtitle}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <ArrowRight size={14} className={clsx("shrink-0 ml-2 transition-transform", isSelected ? "text-blue-400 translate-x-0.5" : "text-transparent")} />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {/* Footer helper */}
+                                            <div className="p-2.5 bg-slate-950/60 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                                                <span>Use <kbd className="px-1 py-0.5 bg-white/10 rounded text-slate-300">↑</kbd> <kbd className="px-1 py-0.5 bg-white/10 rounded text-slate-300">↓</kbd> to navigate</span>
+                                                <span>Press <kbd className="px-1 py-0.5 bg-white/10 rounded text-slate-300">Enter</kbd> to select</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                     {/* Right User Actions */}
                     <div className="flex items-center gap-4">
@@ -306,3 +611,4 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
+

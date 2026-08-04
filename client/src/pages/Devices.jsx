@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Plus, Server, Activity, AlertTriangle, Trash2, ChevronDown, Zap, Lock, ShieldAlert, ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Plus, Server, Activity, AlertTriangle, Trash2, ChevronDown, Zap, Lock, ShieldAlert, ArrowRight, Search, X, Filter } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import NodeStatusBadge from "../components/NodeStatusBadge";
@@ -27,6 +27,8 @@ const getPlanLabel = (plan) => PLAN_LABELS[(plan || "free").toLowerCase()] ?? "F
 const Devices = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchFilter = (searchParams.get("search") || "").trim();
 
     const [devices, setDevices]           = useState([]);
     const [limitInfo, setLimitInfo]       = useState(null);
@@ -104,6 +106,31 @@ const Devices = () => {
         }
     };
 
+    // Filter devices based on URL search query
+    const q = searchFilter.toLowerCase();
+    const filteredDevices = devices.filter((device) => {
+        if (!q) return true;
+        const typeLabel = (
+            device.device_type === 'ldr_sensor' ? 'LightNode light sensor' :
+            device.device_type === 'combined_sensor' ? 'FusionNode multi sensor unified' :
+            device.device_type === 'air_quality_monitor' ? 'AirQualityNode AQI monitor environment' :
+            device.device_type === 'energy_meter' ? 'Energy Meter power load' : 'GasNode gas sensor'
+        ).toLowerCase();
+        const idStr = (device.device_id || "").toLowerCase();
+        const typeStr = (device.device_type || "").toLowerCase();
+        const statusStr = device.is_online ? "online active" : "offline inactive";
+
+        return idStr.includes(q) || typeStr.includes(q) || typeLabel.includes(q) || statusStr.includes(q);
+    });
+
+    const handleSearchChange = (val) => {
+        if (val.trim()) {
+            setSearchParams({ search: val });
+        } else {
+            setSearchParams({});
+        }
+    };
+
     // Derived limit data
     const plan       = limitInfo?.plan  || (user?.subscription_plan || "free").toLowerCase();
     const maxNodes   = limitInfo?.limit || getPlanLimit(plan);
@@ -119,23 +146,46 @@ const Devices = () => {
     return (
         <div className="relative">
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-violet-200">Devices</h1>
                     <p className="text-slate-400 font-light text-lg">Manage your connected nodes</p>
                 </div>
-                <motion.button
-                    whileHover={{ scale: atLimit ? 1 : 1.05 }}
-                    whileTap={{ scale: atLimit ? 1 : 0.95 }}
-                    onClick={() => atLimit ? navigate("/subscription") : setShowAddModal(true)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                        atLimit
-                            ? "bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 cursor-not-allowed"
-                            : "neo-btn-primary"
-                    }`}
-                >
-                    {atLimit ? <><Lock size={16} /> Limit Reached</> : <><Plus size={18} /><span>Deploy Node</span></>}
-                </motion.button>
+
+                <div className="flex items-center gap-3">
+                    {/* Inline Page Search Filter */}
+                    <div className="relative w-full md:w-64">
+                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Filter devices..."
+                            value={searchFilter}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="w-full pl-9 pr-8 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-violet-500/50 transition-all"
+                        />
+                        {searchFilter && (
+                            <button
+                                onClick={() => setSearchParams({})}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 rounded"
+                            >
+                                <X size={13} />
+                            </button>
+                        )}
+                    </div>
+
+                    <motion.button
+                        whileHover={{ scale: atLimit ? 1 : 1.05 }}
+                        whileTap={{ scale: atLimit ? 1 : 0.95 }}
+                        onClick={() => atLimit ? navigate("/subscription") : setShowAddModal(true)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shrink-0 transition-all ${
+                            atLimit
+                                ? "bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 cursor-not-allowed"
+                                : "neo-btn-primary"
+                        }`}
+                    >
+                        {atLimit ? <><Lock size={16} /> Limit Reached</> : <><Plus size={18} /><span>Deploy Node</span></>}
+                    </motion.button>
+                </div>
             </div>
 
             {/* Plan Usage Bar */}
@@ -148,6 +198,11 @@ const Devices = () => {
                     <div className="flex items-center gap-2">
                         <Server size={14} className="text-slate-400" />
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Node Usage</span>
+                        {searchFilter && (
+                            <span className="ml-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30 flex items-center gap-1">
+                                <Filter size={10} /> Filter: "{searchFilter}" ({filteredDevices.length}/{devices.length})
+                            </span>
+                        )}
                     </div>
                     <div className="flex items-center gap-3">
                         <span className={`text-xs font-black ${atLimit ? "text-rose-400" : "text-slate-300"}`}>
@@ -209,6 +264,26 @@ const Devices = () => {
                         Deploy Now
                     </button>
                 </motion.div>
+            ) : filteredDevices.length === 0 ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-24 rounded-3xl border border-dashed border-white/10 bg-white/5 text-center p-6"
+                >
+                    <div className="p-4 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4 text-amber-400">
+                        <Search className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-1">No nodes match your filter</h3>
+                    <p className="text-slate-400 mb-6 max-w-sm text-sm">
+                        No registered nodes match search query <code className="text-violet-300 font-mono font-bold bg-white/5 px-2 py-0.5 rounded">"{searchFilter}"</code>.
+                    </p>
+                    <button
+                        onClick={() => setSearchParams({})}
+                        className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2"
+                    >
+                        <X size={14} /> Clear Search Filter
+                    </button>
+                </motion.div>
             ) : (
                 <motion.div
                     variants={container}
@@ -216,8 +291,9 @@ const Devices = () => {
                     animate="show"
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                 >
-                    {devices.map((device) => (
+                    {filteredDevices.map((device) => (
                         <Link to={`/devices/${device.device_id}`} key={device.device_id}>
+
                             <motion.div
                                 variants={item}
                                 whileHover={{ y: -5 }}

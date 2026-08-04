@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { 
     BarChart2, Database, Bell, Clock, Calendar, Filter, Download, 
-    ChevronRight, ArrowUpRight, Info, Monitor, Cpu, Zap, Sun, Droplets, ArrowUp, ArrowDown, Wifi
+    ChevronRight, ArrowUpRight, Info, Monitor, Cpu, Zap, Sun, Droplets, ArrowUp, ArrowDown, Wifi, Wind
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
