@@ -76,20 +76,62 @@ def get_device_limit_info(current_user: models.User = Depends(auth.get_current_u
 
 from sqlalchemy import func
 import urllib.parse
+from typing import Optional
+
+def find_user_device(db: Session, current_user: models.User, device_id_str: str) -> Optional[models.Device]:
+    clean_id = urllib.parse.unquote(device_id_str).strip()
+    raw_lower = clean_id.lower()
+
+    # 1. Exact match
+    device = db.query(models.Device).filter(
+        models.Device.device_id == clean_id,
+        models.Device.owner_id == current_user.id
+    ).first()
+    if device:
+        return device
+
+    # 2. Case-insensitive match
+    device = db.query(models.Device).filter(
+        func.lower(models.Device.device_id) == raw_lower,
+        models.Device.owner_id == current_user.id
+    ).first()
+    if device:
+        return device
+
+    # 3. Substring match
+    device = db.query(models.Device).filter(
+        models.Device.owner_id == current_user.id,
+        func.lower(models.Device.device_id).contains(raw_lower)
+    ).first()
+    if device:
+        return device
+
+    # 4. Type alias fallback
+    type_target = None
+    if "fusion" in raw_lower or "combined" in raw_lower or "unified" in raw_lower:
+        type_target = "combined_sensor"
+    elif "air" in raw_lower or "aqi" in raw_lower:
+        type_target = "air_quality_monitor"
+    elif "ldr" in raw_lower or "light" in raw_lower:
+        type_target = "ldr_sensor"
+    elif "gas" in raw_lower:
+        type_target = "gas_sensor"
+    elif "energy" in raw_lower or "power" in raw_lower:
+        type_target = "energy_meter"
+
+    if type_target:
+        device = db.query(models.Device).filter(
+            models.Device.owner_id == current_user.id,
+            models.Device.device_type == type_target
+        ).first()
+        if device:
+            return device
+
+    return None
 
 @router.get("/{device_id}", response_model=schemas.DeviceResponse)
 def get_device(device_id: str, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    clean_id = urllib.parse.unquote(device_id).strip()
-    device = db.query(models.Device).filter(
-        func.lower(models.Device.device_id) == func.lower(clean_id),
-        models.Device.owner_id == current_user.id
-    ).first()
-    if not device:
-        # Fallback exact match
-        device = db.query(models.Device).filter(
-            models.Device.device_id == clean_id,
-            models.Device.owner_id == current_user.id
-        ).first()
+    device = find_user_device(db, current_user, device_id)
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
     return format_device_response(device)
@@ -157,24 +199,25 @@ def create_device(device: schemas.DeviceBase, current_user: models.User = Depend
 @router.get("/{device_id}/readings", response_model=List[schemas.SensorDataResponse])
 def get_device_readings(device_id: str, limit: int = 20, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     # Verify ownership
-    device = db.query(models.Device).filter(models.Device.device_id == device_id, models.Device.owner_id == current_user.id).first()
+    device = find_user_device(db, current_user, device_id)
     if not device:
         raise HTTPException(status_code=404, detail="Device not found")
         
-    readings = db.query(models.SensorData).filter(models.SensorData.device_id == device_id).order_by(models.SensorData.timestamp.desc()).limit(limit).all()
+    readings = db.query(models.SensorData).filter(models.SensorData.device_id == device.device_id).order_by(models.SensorData.timestamp.desc()).limit(limit).all()
     return readings
 
 @router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_device(device_id: str, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    # Verify ownership
-    device = db.query(models.Device).filter(models.Device.device_id == device_id, models.Device.owner_id == current_user.id).first()
+    # Verify ownership using multi-tier resolver
+    device = find_user_device(db, current_user, device_id)
     if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
     
+    actual_id = device.device_id
     # Delete associated readings first (cascade safety)
-    db.query(models.SensorData).filter(models.SensorData.device_id == device_id).delete()
-    db.query(models.LDRReading).filter(models.LDRReading.device_id == device_id).delete()
-    db.query(models.DeviceOutput).filter(models.DeviceOutput.device_id == device_id).delete()
+    db.query(models.SensorData).filter(models.SensorData.device_id == actual_id).delete()
+    db.query(models.LDRReading).filter(models.LDRReading.device_id == actual_id).delete()
+    db.query(models.DeviceOutput).filter(models.DeviceOutput.device_id == actual_id).delete()
     
     # Delete the device
     db.delete(device)

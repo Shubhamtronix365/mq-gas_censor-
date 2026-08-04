@@ -107,7 +107,8 @@ const Devices = () => {
     const confirmDelete = async () => {
         if (!deviceToDelete) return;
         try {
-            await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/devices/${deviceToDelete}`);
+            const targetId = encodeURIComponent(deviceToDelete.trim());
+            await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/devices/${targetId}`);
             await Promise.all([fetchDevices(), fetchLimitInfo()]);
             setDeviceToDelete(null);
             setSelectedDevices(prev => prev.filter(id => id !== deviceToDelete));
@@ -167,9 +168,10 @@ const Devices = () => {
         setBatchDeleting(true);
         try {
             await Promise.all(
-                selectedDevices.map(id => 
-                    axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/devices/${id}`).catch(err => console.error(err))
-                )
+                selectedDevices.map(id => {
+                    const targetId = encodeURIComponent(id.trim());
+                    return axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/devices/${targetId}`).catch(err => console.error(err));
+                })
             );
             setSelectedDevices([]);
             setShowBatchDeleteModal(false);
@@ -398,19 +400,22 @@ const Devices = () => {
                     {filteredDevices.map((device) => {
                         const isSelected = selectedDevices.includes(device.device_id);
 
-                        const cardContent = (
+                        return (
                             <motion.div
+                                key={device.device_id}
                                 variants={item}
                                 whileHover={{ y: -5 }}
                                 onClick={(e) => {
                                     if (selectionMode) {
                                         toggleSelectNode(device.device_id, e);
+                                    } else {
+                                        navigate(`/devices/${device.device_id}`);
                                     }
                                 }}
-                                className={`neo-card p-6 h-full flex flex-col justify-between group relative transition-all ${
+                                className={`neo-card p-6 h-full flex flex-col justify-between group relative transition-all cursor-pointer ${
                                     isSelected
                                         ? "border-2 border-violet-500 bg-violet-500/15 shadow-[0_0_20px_rgba(139,92,246,0.25)]"
-                                        : selectionMode ? "cursor-pointer hover:border-white/20" : ""
+                                        : "hover:border-violet-500/30"
                                 }`}
                             >
                                 <div className="flex justify-between items-start mb-6">
@@ -435,7 +440,7 @@ const Devices = () => {
                                         )}
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 z-10">
                                         <NodeStatusBadge device={device} />
                                         <button
                                             type="button"
@@ -468,14 +473,6 @@ const Devices = () => {
                                     </div>
                                 </div>
                             </motion.div>
-                        );
-
-                        return selectionMode ? (
-                            <div key={device.device_id}>{cardContent}</div>
-                        ) : (
-                            <Link to={`/devices/${device.device_id}`} key={device.device_id}>
-                                {cardContent}
-                            </Link>
                         );
                     })}
 
