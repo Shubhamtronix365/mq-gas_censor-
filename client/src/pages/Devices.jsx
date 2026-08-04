@@ -437,15 +437,14 @@ const Devices = () => {
 
                                     <div className="flex items-center gap-2">
                                         <NodeStatusBadge device={device} />
-                                        {!selectionMode && (
-                                            <button
-                                                onClick={(e) => handleDeleteClick(e, device.device_id)}
-                                                className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
-                                                title="Delete Node"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleDeleteClick(e, device.device_id)}
+                                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors cursor-pointer"
+                                            title="Delete Node"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
                                 </div>
 
